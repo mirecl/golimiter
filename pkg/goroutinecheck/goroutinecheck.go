@@ -39,7 +39,6 @@ func (c Config) run(pass *analysis.Pass) (interface{}, error) {
 
 	for _, pos := range Issues {
 		pass.Reportf(pos, "a goroutine statment forbidden to use.")
-
 	}
 
 	return nil, nil
