@@ -41,45 +41,45 @@ func (i *Issue) Reportf(format string, args ...interface{}) {
 
 }
 
-type issues struct {
+type store struct {
 	mu     sync.Mutex
 	issues []*Issue
 }
 
-func (i *issues) Add(value *Issue) {
-	i.mu.Lock()
-	defer i.mu.Unlock()
+func (s *store) Add(value *Issue) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	i.issues = append(i.issues, value)
+	s.issues = append(s.issues, value)
 }
 
-func (i *issues) Reportf(format string, args ...interface{}) {
-	i.mu.Lock()
-	defer i.mu.Unlock()
+func (s *store) Reportf(format string, args ...interface{}) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	for _, issue := range i.issues {
+	for _, issue := range s.issues {
 		msg := fmt.Sprintf(format, args...)
 		issue.Report(msg)
 	}
 }
 
-func (i *issues) Report(msg string) {
-	i.mu.Lock()
-	defer i.mu.Unlock()
+func (s *store) Report(msg string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	for _, issue := range i.issues {
+	for _, issue := range s.issues {
 		issue.Report(msg)
 	}
 }
 
-func (i *issues) Len() int {
-	i.mu.Lock()
-	defer i.mu.Unlock()
+func (s *store) Len() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	return len(i.issues)
+	return len(s.issues)
 }
 
-func (i *issues) Issues() []*Issue {
+func (i *store) Issues() []*Issue {
 	i.mu.Lock()
 	defer i.mu.Unlock()
 
@@ -87,7 +87,7 @@ func (i *issues) Issues() []*Issue {
 }
 
 func New() Store {
-	return &issues{
+	return &store{
 		mu:     sync.Mutex{},
 		issues: make([]*Issue, 0),
 	}
