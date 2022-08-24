@@ -2,25 +2,28 @@ package initcheck
 
 import (
 	"go/ast"
-	"go/token"
 
+	"github.com/mirecl/golimiter/internal"
+	"github.com/mirecl/golimiter/internal/store"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
 )
 
-const funcName = "init"
+const funcName string = "init"
 
 // Config linter.
 type Config struct {
-	Allowed *int
+	Limit *int
 }
 
-// Issues save global state.
-var Issues []token.Pos
+// global state issues.
+var state store.Store
 
 // New instance linter.
 func New(c *Config) *analysis.Analyzer {
+	state = store.New()
+
 	return &analysis.Analyzer{
 		Name:     "initcheck",
 		Doc:      "Check count `init` func.",
@@ -32,48 +35,52 @@ func New(c *Config) *analysis.Analyzer {
 }
 
 func run(c *Config, pass *analysis.Pass) (interface{}, error) {
-	// no restrictions.
-	if c.Allowed == nil {
-		return nil, nil
-	}
-
 	inspector := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 
 	nodeFilter := []ast.Node{(*ast.FuncDecl)(nil)}
 
-	var issues []token.Pos
+	var pkgIssues []*store.Issue
 
 	inspector.Preorder(nodeFilter, func(node ast.Node) {
+		// check `*_test` files.
+		if internal.IsTestFile(pass, node.Pos()) {
+			return
+		}
+
 		fn, _ := node.(*ast.FuncDecl)
 
 		if fn.Name.String() == funcName {
-			issues = append(issues, node.Pos())
+			pkgIssues = append(pkgIssues, &store.Issue{
+				Pos:  node.Pos(),
+				Pass: pass,
+			})
 		}
 	})
 
-	Issues = append(Issues, issues...)
-
-	// check forbidden to use `init` func in all files.
-	if *c.Allowed == 0 {
-		for _, pos := range issues {
-			pass.Reportf(pos, "a init funcs forbidden to use.")
+	// forbidden all `init` funcs.
+	if c.Limit != nil && *c.Limit == 0 {
+		for _, issue := range pkgIssues {
+			issue.Report("a `init` funcs forbidden to use.")
 		}
 		return nil, nil
 	}
 
-	// check forbidden to use `init` func in all files if allowed num (Config) < issues.
-	if len(Issues) > *c.Allowed {
-		for _, pos := range Issues {
-			pass.Reportf(pos, "a found %d init funcs, but allowed %d.", len(Issues), *c.Allowed)
-		}
-		return nil, nil
+	// 1 `init` func in package - Ok.
+	if len(pkgIssues) == 1 {
+		state.Add(pkgIssues[0])
 	}
 
-	// check forbidden to use `init` func in package if found > 1.
-	if len(issues) > 1 {
-		for _, pos := range issues {
-			pass.Reportf(pos, "a found %d init funcs in package `%s`, but allowed 1.", len(issues), pass.Pkg.Name())
+	// 2 or more `init` func in package.
+	if len(pkgIssues) > 1 {
+		for _, issue := range pkgIssues {
+			issue.Reportf("a found %d `init` funcs in package `%s`, but allowed only 1.", len(pkgIssues), pass.Pkg.Name())
+			state.Add(issue)
 		}
+	}
+
+	// limit `init` funcs.
+	if c.Limit != nil && state.Len() > *c.Limit {
+		state.Reportf("a number of allowed `init` funcs %d.", *c.Limit)
 		return nil, nil
 	}
 

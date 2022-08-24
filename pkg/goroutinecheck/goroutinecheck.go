@@ -2,8 +2,9 @@ package goroutinecheck
 
 import (
 	"go/ast"
-	"go/token"
 
+	"github.com/mirecl/golimiter/internal"
+	"github.com/mirecl/golimiter/internal/store"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
@@ -11,14 +12,16 @@ import (
 
 // Config linter.
 type Config struct {
-	Allowed *int
+	Limit *int
 }
 
-// Issues save global state.
-var Issues []token.Pos
+// global state issues.
+var state store.Store
 
 // New instance linter.
 func New(c *Config) *analysis.Analyzer {
+	state = store.New()
+
 	return &analysis.Analyzer{
 		Name:     "goroutinecheck",
 		Doc:      "Check count `goroutine` statment.",
@@ -31,7 +34,7 @@ func New(c *Config) *analysis.Analyzer {
 
 func run(c *Config, pass *analysis.Pass) (interface{}, error) {
 	// no restrictions.
-	if c.Allowed == nil {
+	if c.Limit == nil {
 		return nil, nil
 	}
 
@@ -39,25 +42,36 @@ func run(c *Config, pass *analysis.Pass) (interface{}, error) {
 
 	nodeFilter := []ast.Node{(*ast.GoStmt)(nil)}
 
+	var pkgIssues []*store.Issue
+
 	inspector.Preorder(nodeFilter, func(node ast.Node) {
-		Issues = append(Issues, node.Pos())
+		// check `*_test` files.
+		if internal.IsTestFile(pass, node.Pos()) {
+			return
+		}
+
+		pkgIssues = append(pkgIssues, &store.Issue{
+			Pos:  node.Pos(),
+			Pass: pass,
+		})
 	})
 
-	// check forbidden to use goroutine statment in all files.
-	if *c.Allowed == 0 {
-		for _, pos := range Issues {
-			pass.Reportf(pos, "a init funcs forbidden to use.")
+	// forbidden all `goroutine` statement.
+	if *c.Limit == 0 {
+		for _, issue := range pkgIssues {
+			issue.Report("a `goroutine` statement forbidden to use.")
 		}
 		return nil, nil
 	}
 
-	// check forbidden to use  goroutine statment in all files if allowed num (Config) < issues.
-	if *c.Allowed >= len(Issues) {
-		return nil, nil
+	for _, issue := range pkgIssues {
+		state.Add(issue)
 	}
 
-	for _, pos := range Issues {
-		pass.Reportf(pos, "a goroutine statment forbidden to use, but allowed %d", *c.Allowed)
+	// limit `goroutine` statement.
+	if state.Len() >= *c.Limit {
+		state.Reportf("a number of allowed `goroutine` statement %d.", *c.Limit)
+		return nil, nil
 	}
 
 	return nil, nil

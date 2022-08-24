@@ -1,2 +1,2 @@
 build:
-	@go build -o golimiter cmd/main.go
+	@go build -o golimiter .
