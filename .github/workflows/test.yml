@@ -1,4 +1,4 @@
-name: "Test and Lint"
+name: "Test"
 
 on:
   push:
@@ -20,3 +20,9 @@ jobs:
       run: make lint
     - name: Test
       run: make test
+    - name: Coverage     
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CI_CODECOV }}  
+        file: ./coverage.out
+        fail_ci_if_error: true

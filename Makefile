@@ -1,7 +1,7 @@
 test:
-	@go test ./... -coverprofile cover.out > /dev/null
+	@go test ./... -coverprofile=coverage.out -covermode=atomic > /dev/null
 	@echo "-----------------------------------------------------------------------------------------------------"
-	@go tool cover -func cover.out
+	@go tool cover -func coverage.out
 	@echo "-----------------------------------------------------------------------------------------------------"
 
 lint:
