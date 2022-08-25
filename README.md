@@ -21,3 +21,6 @@
 * *initcheck* - set limit for `init` functions count.
 * *goroutinecheck* - set limit for `goroutine` statements count.
 
+
+> **Warning**
+> ``golimiter`` not analysis *_test files.
