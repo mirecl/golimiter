@@ -47,7 +47,10 @@ func TestGoroutine(t *testing.T) {
 		{
 			name: "success analysis with test file",
 			pkg:  []string{"e"},
-			cfg:  new(goroutinecheck.Config),
+			cfg: func() *goroutinecheck.Config {
+				Limit := 10
+				return &goroutinecheck.Config{Limit: &Limit}
+			}(),
 		},
 	}
 
