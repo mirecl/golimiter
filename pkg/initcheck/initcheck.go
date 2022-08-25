@@ -10,8 +10,6 @@ import (
 	"golang.org/x/tools/go/ast/inspector"
 )
 
-const funcName string = "init"
-
 // Config linter.
 type Config struct {
 	Limit *int
@@ -35,7 +33,7 @@ func New(c *Config) *analysis.Analyzer {
 }
 
 func run(c *Config, pass *analysis.Pass) (interface{}, error) {
-	inspector := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector) //nolint:errcheck
+	inspector := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 
 	nodeFilter := []ast.Node{(*ast.FuncDecl)(nil)}
 
@@ -47,9 +45,9 @@ func run(c *Config, pass *analysis.Pass) (interface{}, error) {
 			return
 		}
 
-		fn, _ := node.(*ast.FuncDecl) //nolint:errcheck
+		fn, _ := node.(*ast.FuncDecl)
 
-		if fn.Name.String() == funcName {
+		if fn.Name.String() == "init" {
 			pkgIssues = append(pkgIssues, &store.Issue{
 				Pos:  node.Pos(),
 				Pass: pass,

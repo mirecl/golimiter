@@ -8,21 +8,30 @@ import (
 	"golang.org/x/tools/go/analysis"
 )
 
+// Store is interface for global state for each analyzer.
 type Store interface {
+	// Add new issue.
 	Add(value *Issue)
+	// Get all issues.
 	Issues() []*Issue
+	// Get count all issues.
 	Len() int
+	// Report problem.
 	Report(msg string)
+	// Report problem.
 	Reportf(format string, args ...interface{})
 }
 
+// Issue problem in analysis.
 type Issue struct {
 	Pass *analysis.Pass
 	Pos  token.Pos
 	done bool
 }
 
+// Report set problem.
 func (i *Issue) Report(msg string) {
+	// check status issue - report problem or not.
 	if i.done {
 		return
 	}
@@ -35,6 +44,7 @@ func (i *Issue) Report(msg string) {
 	i.done = true
 }
 
+// Reportf set problem.
 func (i *Issue) Reportf(format string, args ...interface{}) {
 	msg := fmt.Sprintf(format, args...)
 	i.Report(msg)
@@ -85,6 +95,7 @@ func (s *store) Issues() []*Issue {
 	return s.issues
 }
 
+// New create global state.
 func New() Store {
 	return &store{
 		mu:     sync.Mutex{},

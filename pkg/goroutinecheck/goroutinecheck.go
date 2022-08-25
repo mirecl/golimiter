@@ -38,7 +38,7 @@ func run(c *Config, pass *analysis.Pass) (interface{}, error) {
 		return nil, nil
 	}
 
-	inspector := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector) //nolint:errcheck
+	inspector := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 
 	nodeFilter := []ast.Node{(*ast.GoStmt)(nil)}
 

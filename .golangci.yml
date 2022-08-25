@@ -7,9 +7,17 @@ output:
   format: colored-line-number
 
 issues:
+  max-issues-per-linter: 100
+  max-same-issues: 100
   exclude-use-default: false
+  exclude:
+    - "ST1000: at least one file in a package should have a package comment"
 
 linters-settings:
+  staticcheck:
+    go: "1.18"
+    checks: ["all"]
+
   dupl:
     threshold: 50
 
@@ -17,23 +25,14 @@ linters-settings:
     max-blank-identifiers: 2
 
   errcheck:
-    check-type-assertions: true
+    check-type-assertions: false
     check-blank: true
 
   govet:
-    enable:
-      - asmdecl
-      - assign
-      - atomic
-      - atomicalign
-      - bools
-      - buildtag
-      - cgocall 
-      - composites
-      - copylocks
-      - deepequalerrors
-      - errorsas
-      - fieldalignment
+    check-shadowing: true
+    shadow:
+      strict: true
+    enable-all: true
 
 linters:
   disable-all: true
@@ -43,6 +42,7 @@ linters:
     - dogsled
     - dupl
     - errcheck
+    - exportloopref
     - funlen
     - goconst
     - gocritic
