@@ -24,7 +24,7 @@ func New(c *Config) *analysis.Analyzer {
 
 	return &analysis.Analyzer{
 		Name:     "goroutinecheck",
-		Doc:      "Check count `goroutine` statment.",
+		Doc:      "Check count `goroutine` statement.",
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
 		Run: func(pass *analysis.Pass) (interface{}, error) {
 			return run(c, pass)
@@ -38,7 +38,7 @@ func run(c *Config, pass *analysis.Pass) (interface{}, error) {
 		return nil, nil
 	}
 
-	inspector := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+	inspector := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector) //nolint:errcheck
 
 	nodeFilter := []ast.Node{(*ast.GoStmt)(nil)}
 

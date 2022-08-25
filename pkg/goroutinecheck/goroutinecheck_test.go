@@ -11,9 +11,9 @@ func TestGoroutine(t *testing.T) {
 	testdata := analysistest.TestData()
 
 	TestCases := []struct {
+		cfg  *goroutinecheck.Config
 		name string
 		pkg  []string
-		cfg  *goroutinecheck.Config
 	}{
 		{
 			name: "success analysis",

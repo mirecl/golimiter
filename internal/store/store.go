@@ -17,8 +17,8 @@ type Store interface {
 }
 
 type Issue struct {
-	Pos  token.Pos
 	Pass *analysis.Pass
+	Pos  token.Pos
 	done bool
 }
 
@@ -38,12 +38,11 @@ func (i *Issue) Report(msg string) {
 func (i *Issue) Reportf(format string, args ...interface{}) {
 	msg := fmt.Sprintf(format, args...)
 	i.Report(msg)
-
 }
 
 type store struct {
-	mu     sync.Mutex
 	issues []*Issue
+	mu     sync.Mutex
 }
 
 func (s *store) Add(value *Issue) {
@@ -79,11 +78,11 @@ func (s *store) Len() int {
 	return len(s.issues)
 }
 
-func (i *store) Issues() []*Issue {
-	i.mu.Lock()
-	defer i.mu.Unlock()
+func (s *store) Issues() []*Issue {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	return i.issues
+	return s.issues
 }
 
 func New() Store {

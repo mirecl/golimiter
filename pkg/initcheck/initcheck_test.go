@@ -11,9 +11,9 @@ func TestInit(t *testing.T) {
 	testdata := analysistest.TestData()
 
 	TestCases := []struct {
+		cfg  *initcheck.Config
 		name string
 		pkg  []string
-		cfg  *initcheck.Config
 	}{
 		{
 			name: "success analysis",

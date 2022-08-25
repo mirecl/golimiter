@@ -35,7 +35,7 @@ func New(c *Config) *analysis.Analyzer {
 }
 
 func run(c *Config, pass *analysis.Pass) (interface{}, error) {
-	inspector := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+	inspector := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector) //nolint:errcheck
 
 	nodeFilter := []ast.Node{(*ast.FuncDecl)(nil)}
 
@@ -47,7 +47,7 @@ func run(c *Config, pass *analysis.Pass) (interface{}, error) {
 			return
 		}
 
-		fn, _ := node.(*ast.FuncDecl)
+		fn, _ := node.(*ast.FuncDecl) //nolint:errcheck
 
 		if fn.Name.String() == funcName {
 			pkgIssues = append(pkgIssues, &store.Issue{
