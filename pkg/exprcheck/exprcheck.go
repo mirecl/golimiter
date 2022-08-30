@@ -2,7 +2,6 @@ package exprcheck
 
 import (
 	"go/ast"
-	"go/token"
 
 	"github.com/mirecl/golimiter/internal"
 	"golang.org/x/tools/go/analysis"
@@ -45,10 +44,10 @@ func run(pass *analysis.Pass, c *Config) (interface{}, error) {
 
 		switch node := node.(type) {
 		case *ast.IfStmt:
-			check(node.Cond, r.collect)
+			r.check(node.Cond)
 		case *ast.ReturnStmt:
 			for _, stmt := range node.Results {
-				check(stmt, r.collect)
+				r.check(stmt)
 			}
 		}
 
@@ -64,17 +63,13 @@ type result struct {
 	Complexity int
 }
 
-func (r *result) collect(t token.Token) {
-	r.Complexity++
-}
-
-func check(expr ast.Expr, f func(t token.Token)) {
+func (r *result) check(expr ast.Expr) {
 	switch n := expr.(type) {
 	case *ast.BinaryExpr:
-		f(n.Op)
-		check(n.X, f)
-		check(n.Y, f)
+		r.Complexity++
+		r.check(n.X)
+		r.check(n.Y)
 	case *ast.ParenExpr:
-		check(n.X, f)
+		r.check(n.X)
 	}
 }

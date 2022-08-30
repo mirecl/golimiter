@@ -18,15 +18,15 @@
 
 ---
 # ✨ GoLimiter
-``golimiter`` is a Go static analysis package.
-
-# 📖 List check
-* *initcheck* - set limit for `init` functions.
-* *goroutinecheck* - set limit `goroutine` statements.
-* *genericcheck* - forbidden to used `generic`. 
-* *exprcheck* - set limit complexity for `expr`.
-
+``golimiter`` is a Go linter and static analysis package.
+ 
+# 📖 Checks:
+* *initcheck* - set limit for `init` functions
+* *goroutinecheck* - set limit for `goroutine` statements
+* *genericcheck* - forbid usage of `generics`
+* *exprcheck* - limit complexity for `logical expressions`
+ 
 ---
-
-> **Warning**
-> ``golimiter`` not analysis *_test files.
+ 
+> **Note:**
+> ``golimiter`` does not analyze *_test files.
