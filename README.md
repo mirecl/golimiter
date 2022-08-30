@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://github.com/mirecl/golimiter"><img src="assert/logo.png" alt="golimiter" width="300"></a>
+  <a href="https://github.com/mirecl/golimiter"><img src="assert/logo.png" alt="golimiter" width="150"></a>
 </p>
 <p align="center">
     <a href="https://github.com/mirecl/golimiter/blob/master/LICENSE" target="_blank">
