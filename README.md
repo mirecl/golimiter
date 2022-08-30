@@ -26,6 +26,7 @@
 * *genericcheck* - forbidden to used `generic`. 
 * *exprcheck* - set limit complexity for `expr`.
 
+---
 
 > **Warning**
 > ``golimiter`` not analysis *_test files.
