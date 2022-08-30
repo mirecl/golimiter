@@ -1,4 +1,7 @@
 <p align="center">
+  <a href="https://github.com/mirecl/golimiter"><img src="assert/logo.png" alt="golimiter" width="350"></a>
+</p>
+<p align="center">
     <a href="https://github.com/mirecl/golimiter/blob/master/LICENSE" target="_blank">
         <img src="https://img.shields.io/github/license/mirecl/golimiter" alt="License">
     </a>
