@@ -18,9 +18,7 @@ func New() *analysis.Analyzer {
 		Name:     "genericcheck",
 		Doc:      "Check `generic` statement.",
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
-		Run: func(pass *analysis.Pass) (interface{}, error) {
-			return run(pass)
-		},
+		Run:      run,
 	}
 }
 
