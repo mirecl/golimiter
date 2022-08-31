@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/mirecl/golimiter/pkg/genericcheck"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/tools/go/analysis/analysistest"
 )
 
@@ -42,4 +43,12 @@ func TestGeneric(t *testing.T) {
 			analysistest.Run(t, testdata, analyzer, testCase.pkg...)
 		})
 	}
+}
+
+func TestForTypeSpec(t *testing.T) {
+	require.Nil(t, genericcheck.ForTypeSpec(nil))
+}
+
+func TestForFuncType(t *testing.T) {
+	require.Nil(t, genericcheck.ForFuncType(nil))
 }
