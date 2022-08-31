@@ -4,8 +4,14 @@ import (
 	"testing"
 
 	"github.com/mirecl/golimiter/pkg/goroutinecheck"
+	"golang.org/x/mod/modfile"
 	"golang.org/x/tools/go/analysis/analysistest"
 )
+
+var modBytes = []byte(`module github.com/repo/name
+
+go 1.18
+`)
 
 func TestGoroutine(t *testing.T) {
 	testdata := analysistest.TestData()
@@ -50,6 +56,20 @@ func TestGoroutine(t *testing.T) {
 			cfg: func() *goroutinecheck.Config {
 				Limit := 10
 				return &goroutinecheck.Config{Limit: &Limit}
+			}(),
+		},
+		{
+			name: "success analysis with exclude main",
+			pkg:  []string{"f"},
+			cfg: func() *goroutinecheck.Config {
+				Limit := 0
+				gomodfile, _ := modfile.Parse("go.mod", modBytes, nil)
+				return &goroutinecheck.Config{
+					Limit:        &Limit,
+					ModFile:      gomodfile,
+					ExcludeFuncs: []string{"f.main", "github.com/repo/name/testdata/src/f/f.main5"},
+					ExcludeFiles: []string{"f/f3.go", "github.com/repo/name/testdata/src/f/f4.go"},
+				}
 			}(),
 		},
 	}

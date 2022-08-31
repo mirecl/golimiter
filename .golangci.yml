@@ -14,6 +14,9 @@ issues:
     - "ST1000: at least one file in a package should have a package comment"
 
 linters-settings:
+  funlen:
+    lines: 80
+    
   staticcheck:
     go: "1.18"
     checks: ["all"]

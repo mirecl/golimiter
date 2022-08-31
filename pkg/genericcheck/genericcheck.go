@@ -11,6 +11,11 @@ import (
 	"golang.org/x/tools/go/ast/inspector"
 )
 
+// Config linter.
+type Config struct {
+	Enable bool `yaml:"enable"`
+}
+
 // New instance linter.
 // Please more info in https://cs.opensource.google/go/x/tools/+/master:go/analysis/passes/usesgenerics/
 func New() *analysis.Analyzer {
@@ -36,8 +41,10 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	inspector.Preorder(nodeFilter, func(node ast.Node) {
 		var isGeneric bool
 
+		fileName := pass.Fset.Position(node.Pos()).Filename
+
 		// check `*_test` files.
-		if internal.IsTestFile(pass, node.Pos()) {
+		if internal.IsTestFile(fileName) {
 			return
 		}
 

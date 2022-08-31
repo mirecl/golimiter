@@ -12,7 +12,7 @@ import (
 
 // Config linter.
 type Config struct {
-	Limit *int
+	Limit *int `yaml:"limit"`
 }
 
 // global state issues.
@@ -40,8 +40,10 @@ func run(c *Config, pass *analysis.Pass) (interface{}, error) {
 	var pkgIssues []*store.Issue
 
 	inspector.Preorder(nodeFilter, func(node ast.Node) {
+		fileName := pass.Fset.Position(node.Pos()).Filename
+
 		// check `*_test` files.
-		if internal.IsTestFile(pass, node.Pos()) {
+		if internal.IsTestFile(fileName) {
 			return
 		}
 
