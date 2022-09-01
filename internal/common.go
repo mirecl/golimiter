@@ -5,20 +5,24 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
+	"path/filepath"
 	"strings"
+
+	"golang.org/x/mod/modfile"
+	"golang.org/x/tools/go/analysis"
 )
 
 // ExcludeType consist object for exclude from analysis.
 type ExcludeType []string
 
 // ConsistOf check object on excluded.
-func (e ExcludeType) ConsistOf(fileName string) bool {
-	if fileName == "" {
+func (e ExcludeType) ConsistOf(object string) bool {
+	if object == "" {
 		return false
 	}
 
 	for _, value := range e {
-		if strings.HasSuffix(fileName, value) {
+		if strings.HasSuffix(object, value) {
 			return true
 		}
 	}
@@ -70,4 +74,48 @@ func GetFuncDecl(pos token.Position) *ast.FuncDecl {
 	})
 
 	return fn
+}
+
+// Exclude rules.
+type Exclude struct {
+	ModFile *modfile.File
+	Files   ExcludeType `yaml:"files"`
+	Funcs   ExcludeType `yaml:"funcs"`
+}
+
+// IsExclude check all contidion for exclude analysis.
+func (e Exclude) IsExclude(pass *analysis.Pass, node ast.Node) bool {
+	folder, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+
+	var fileName, fileMod, funcName, funcMod string
+
+	pos := pass.Fset.Position(node.Pos())
+
+	fileName = pos.Filename
+	funcName = pass.Pkg.Name() + "." + GetFuncDecl(pos).Name.Name
+
+	if e.ModFile != nil {
+		fileMod = strings.ReplaceAll(fileName, folder, e.ModFile.Module.Mod.Path)
+		funcMod = strings.ReplaceAll(filepath.Dir(fileName), folder, e.ModFile.Module.Mod.Path) + "/" + funcName
+	}
+
+	// check `*_test` files.
+	if IsTestFile(fileName) {
+		return true
+	}
+
+	// check exclude files.
+	if e.Files.ConsistOf(fileName) || e.Files.ConsistOf(fileMod) {
+		return true
+	}
+
+	// check exclude funcs.
+	if e.Funcs.ConsistOf(funcName) || e.Funcs.ConsistOf(funcMod) {
+		return true
+	}
+
+	return false
 }

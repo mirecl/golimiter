@@ -3,15 +3,15 @@ package exprcheck_test
 import (
 	"testing"
 
+	"github.com/mirecl/golimiter/internal"
 	"github.com/mirecl/golimiter/pkg/exprcheck"
 	"golang.org/x/mod/modfile"
 	"golang.org/x/tools/go/analysis/analysistest"
 )
 
-var modBytes = []byte(`module github.com/repo/name
+type Exclude = internal.Exclude
 
-go 1.18
-`)
+var modBytes = []byte(`module github.com/repo/name`)
 
 func TestIf(t *testing.T) {
 	testdata := analysistest.TestData()
@@ -49,9 +49,12 @@ func TestIf(t *testing.T) {
 			pkg:  []string{"f"},
 			cfg: func() *exprcheck.Config {
 				complexity := 3
+				e := Exclude{Files: []string{"f.go"}}
+
 				return &exprcheck.Config{
-					Complexity:   complexity,
-					ExcludeFiles: []string{"f.go"}}
+					Complexity: complexity,
+					Exclude:    e,
+				}
 			}(),
 		},
 		{
@@ -59,9 +62,12 @@ func TestIf(t *testing.T) {
 			pkg:  []string{"g"},
 			cfg: func() *exprcheck.Config {
 				complexity := 3
+				e := Exclude{Funcs: []string{"g.g2"}}
+
 				return &exprcheck.Config{
-					Complexity:   complexity,
-					ExcludeFuncs: []string{"g.g2"}}
+					Complexity: complexity,
+					Exclude:    e,
+				}
 			}(),
 		},
 		{
@@ -69,16 +75,20 @@ func TestIf(t *testing.T) {
 			pkg:  []string{"h"},
 			cfg: func() *exprcheck.Config {
 				complexity := 3
-				gomodfile, _ := modfile.Parse("go.mod", modBytes, nil)
-
-				return &exprcheck.Config{
-					Complexity: complexity,
-					ModFile:    gomodfile,
-					ExcludeFuncs: []string{
+				ModFile, _ := modfile.Parse("go.mod", modBytes, nil)
+				e := Exclude{
+					ModFile: ModFile,
+					Funcs: []string{
 						"github.com/repo/name/testdata/src/h/h.h31",
 						"github.com/repo/name/testdata/src/h/h.h2",
 					},
-					ExcludeFiles: []string{"github.com/repo/name/testdata/src/h/h1.go"}}
+					Files: []string{"github.com/repo/name/testdata/src/h/h1.go"},
+				}
+
+				return &exprcheck.Config{
+					Complexity: complexity,
+					Exclude:    e,
+				}
 			}(),
 		},
 	}

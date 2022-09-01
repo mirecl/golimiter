@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 
+	"github.com/mirecl/golimiter/internal"
 	"github.com/mirecl/golimiter/pkg/exprcheck"
 	"github.com/mirecl/golimiter/pkg/goroutinecheck"
 	"github.com/mirecl/golimiter/pkg/initcheck"
@@ -19,12 +20,12 @@ type Config struct {
 
 // Default returns `default` value for global Config.
 func Default() *Config {
-	mf := ReadModFile()
+	exclude := internal.Exclude{ModFile: ReadModFile()}
 
 	config := &Config{
 		Expr: exprcheck.Config{
 			Complexity: 3,
-			ModFile:    mf,
+			Exclude:    exclude,
 		},
 	}
 
@@ -52,12 +53,12 @@ func Read() *Config {
 func ReadModFile() *modfile.File {
 	body, err := os.ReadFile("go.mod")
 	if err != nil {
-		return nil
+		panic(err)
 	}
 
 	gomodfile, err := modfile.Parse("go.mod", body, nil)
 	if err != nil {
-		return nil
+		panic(err)
 	}
 
 	return gomodfile
