@@ -3,7 +3,7 @@ module github.com/mirecl/golimiter
 go 1.18
 
 require (
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	golang.org/x/mod v0.6.0
 	golang.org/x/tools v0.2.0
 	gopkg.in/yaml.v3 v3.0.1
