@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/stretchr/testify v1.8.2
-	golang.org/x/mod v0.10.0
+	golang.org/x/mod v0.12.0
 	golang.org/x/tools v0.9.1
 	gopkg.in/yaml.v3 v3.0.1
 )
