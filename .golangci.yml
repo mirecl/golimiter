@@ -10,15 +10,19 @@ issues:
   max-issues-per-linter: 100
   max-same-issues: 100
   exclude-use-default: false
+  exclude-rules:
+    - linters:
+        - revive
+      text: "package-comments:"
   exclude:
     - "ST1000: at least one file in a package should have a package comment"
 
 linters-settings:
   funlen:
     lines: 80
-    
+
   staticcheck:
-    go: "1.18"
+    go: "1.20"
     checks: ["all"]
 
   dupl:
@@ -40,8 +44,6 @@ linters-settings:
 linters:
   disable-all: true
   enable:
-    - deadcode
-    - depguard
     - dogsled
     - dupl
     - errcheck
@@ -65,16 +67,14 @@ linters:
     - rowserrcheck
     - exportloopref
     - staticcheck
-    - structcheck
     - stylecheck
     - typecheck
     - unconvert
     - unparam
     - unused
-    - varcheck
     - whitespace
 
   presets:
-    - comment 
-    - error 
+    - comment
+    - error
     - unused
