@@ -21,7 +21,7 @@ type Config struct {
 // New instance linter.
 func New(c *Config) *analysis.Analyzer {
 	return &analysis.Analyzer{
-		Name:     "exprcheck",
+		Name:     "ExprCheck",
 		Doc:      "Check complexity `expr` statement.",
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
 		Run: func(pass *analysis.Pass) (interface{}, error) {

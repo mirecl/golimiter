@@ -20,7 +20,7 @@ type Config struct {
 // Please more info in https://cs.opensource.google/go/x/tools/+/master:go/analysis/passes/usesgenerics/
 func New() *analysis.Analyzer {
 	return &analysis.Analyzer{
-		Name:     "genericcheck",
+		Name:     "GenericCheck",
 		Doc:      "Check `generic` statement.",
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
 		Run:      run,

@@ -27,7 +27,7 @@ func New(c *Config) *analysis.Analyzer {
 	state = store.New()
 
 	return &analysis.Analyzer{
-		Name:     "goroutinecheck",
+		Name:     "GoroutineCheck",
 		Doc:      "Check count `goroutine` statement.",
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
 		Run: func(pass *analysis.Pass) (interface{}, error) {
