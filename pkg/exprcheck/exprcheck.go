@@ -14,8 +14,8 @@ type Exclude = internal.Exclude
 
 // Config linter.
 type Config struct {
-	Exclude    `yaml:"exclude"`
-	Complexity int `yaml:"complexity"`
+	Exclude    `json:"exclude" yaml:"exclude"`
+	Complexity int `json:"complexity" yaml:"complexity"`
 }
 
 // New instance linter.

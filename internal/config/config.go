@@ -13,9 +13,9 @@ import (
 
 // Config is global configuration struct.
 type Config struct {
-	Init      initcheck.Config      `arg:"-" yaml:"init"`
-	Goroutine goroutinecheck.Config `yaml:"goroutine"`
-	Expr      exprcheck.Config      `yaml:"expr"`
+	Init      initcheck.Config      `json:"initcheck" yaml:"init"`
+	Goroutine goroutinecheck.Config `json:"goroutinecheck" yaml:"goroutine"`
+	Expr      exprcheck.Config      `json:"exprcheck" yaml:"expr"`
 }
 
 // Default returns `default` value for global Config.
@@ -24,7 +24,7 @@ func Default() *Config {
 
 	config := &Config{
 		Expr: exprcheck.Config{
-			Complexity: 3,
+			Complexity: 6,
 			Exclude:    exclude,
 		},
 	}

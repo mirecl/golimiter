@@ -79,8 +79,8 @@ func GetFuncDecl(pos token.Position) *ast.FuncDecl {
 // Exclude rules.
 type Exclude struct {
 	ModFile *modfile.File
-	Files   ExcludeType `yaml:"files"`
-	Funcs   ExcludeType `yaml:"funcs"`
+	Files   ExcludeType `json:"files" yaml:"files"`
+	Funcs   ExcludeType `json:"funcs" yaml:"funcs"`
 }
 
 // IsExclude check all contidion for exclude analysis.

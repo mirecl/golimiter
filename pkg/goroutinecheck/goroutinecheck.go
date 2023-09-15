@@ -15,8 +15,8 @@ type Exclude = internal.Exclude
 
 // Config linter.
 type Config struct {
-	Limit   *int `yaml:"limit"`
-	Exclude `yaml:"exclude"`
+	Limit   *int `json:"limit" yaml:"limit"`
+	Exclude `json:"exclude" yaml:"exclude"`
 }
 
 // global state issues.

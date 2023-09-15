@@ -12,7 +12,7 @@ import (
 
 // Config linter.
 type Config struct {
-	Limit *int `yaml:"limit"`
+	Limit *int `json:"limit" yaml:"limit"`
 }
 
 // global state issues.
