@@ -95,21 +95,31 @@ func (e Exclude) IsExclude(pass *analysis.Pass, node ast.Node) bool {
 	pos := pass.Fset.Position(node.Pos())
 
 	fileName = pos.Filename
-	funcName = pass.Pkg.Name() + "." + GetFuncDecl(pos).Name.Name
-
-	if e.ModFile != nil {
-		fileMod = strings.ReplaceAll(fileName, folder, e.ModFile.Module.Mod.Path)
-		funcMod = strings.ReplaceAll(filepath.Dir(fileName), folder, e.ModFile.Module.Mod.Path) + "/" + funcName
-	}
 
 	// check `*_test` files.
 	if IsTestFile(fileName) {
 		return true
 	}
 
+	if e.ModFile != nil {
+		fileMod = strings.ReplaceAll(fileName, folder, e.ModFile.Module.Mod.Path)
+	}
+
 	// check exclude files.
 	if e.Files.ConsistOf(fileName) || e.Files.ConsistOf(fileMod) {
 		return true
+	}
+
+	funcDecl := GetFuncDecl(pos)
+	if funcDecl == nil {
+		// lambda function - not name
+		return false
+	}
+
+	funcName = pass.Pkg.Name() + "." + funcDecl.Name.Name
+
+	if e.ModFile != nil {
+		funcMod = strings.ReplaceAll(filepath.Dir(fileName), folder, e.ModFile.Module.Mod.Path) + "/" + funcName
 	}
 
 	// check exclude funcs.
