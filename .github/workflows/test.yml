@@ -21,7 +21,7 @@ jobs:
       - name: Test
         run: make test
       - name: Coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CI_CODECOV }}
           file: ./coverage.out
