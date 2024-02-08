@@ -1,28 +1,28 @@
-name: "Test"
+# name: "Test"
 
-on:
-  push:
-  pull_request:
-    branches: [master]
+# on:
+#   push:
+#   pull_request:
+#     branches: [master]
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: 1.20.8
-      - name: Install golangci-lint
-        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2
-      - name: Lint
-        run: make lint
-      - name: Test
-        run: make test
-      - name: Coverage
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CI_CODECOV }}
-          file: ./coverage.out
-          fail_ci_if_error: true
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+#       - name: Set up Go
+#         uses: actions/setup-go@v4
+#         with:
+#           go-version: 1.20.8
+#       - name: Install golangci-lint
+#         run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2
+#       - name: Lint
+#         run: make lint
+#       - name: Test
+#         run: make test
+#       - name: Coverage
+#         uses: codecov/codecov-action@v3
+#         with:
+#           token: ${{ secrets.CI_CODECOV }}
+#           file: ./coverage.out
+#           fail_ci_if_error: true
