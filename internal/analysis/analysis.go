@@ -56,7 +56,7 @@ func Run(linters ...*Linter) {
 			}
 
 			for _, issue := range issues {
-				fmt.Printf("%s \033[31m%s: %s (%s)\033[0m\033[30m(GOLIMITER:%s)\033[0m\n", issue.Position(), linter, issue.Message, issue.Code, issue.Hash())
+				fmt.Printf("%s \033[31m%s: %s (%s)\033[0m\033[30m(%s)\033[0m\n", issue.Position(), linter, issue.Message, issue.Code, issue.Hash)
 			}
 		}
 		return

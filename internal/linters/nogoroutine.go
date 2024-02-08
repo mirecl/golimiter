@@ -56,6 +56,7 @@ func runNoGoroutine(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []
 			Code:     codeNoNoGoroutine,
 			Line:     position.Line,
 			Filename: position.Filename,
+			Hash:     analysis.GetHash(fset, node.Pos(), node.End()),
 		})
 	})
 

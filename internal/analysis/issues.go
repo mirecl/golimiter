@@ -17,6 +17,7 @@ type Issue struct {
 	Fset     *token.FileSet `json:"omitempty"`
 	Filename string         `json:"filename"`
 	Line     int            `json:"line"`
+	Hash     string         `json:"hash"`
 }
 
 func (i Issue) Position() string {
@@ -35,15 +36,12 @@ func (i Issue) Position() string {
 	return p
 }
 
-func (i Issue) Hash() string {
-	b, err := os.ReadFile(i.Fset.Position(i.Pos).Filename)
+func GetHash(fset *token.FileSet, start, end token.Pos) string {
+	b, err := os.ReadFile(fset.Position(start).Filename)
 	if err != nil {
 		return "Unknown"
 	}
 
-	start := i.Fset.Position(i.Pos).Offset
-	end := i.Fset.Position(i.End).Offset
-
-	hash := md5.Sum(b[start:end])
+	hash := md5.Sum(b[fset.Position(start).Offset:fset.Position(end).Offset])
 	return hex.EncodeToString(hash[:])
 }

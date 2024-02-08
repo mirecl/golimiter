@@ -62,6 +62,7 @@ func runNoInit(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue
 			Code:     codeNoInit,
 			Line:     position.Line,
 			Filename: position.Filename,
+			Hash:     analysis.GetHash(fset, node.Pos(), node.End()),
 		})
 	})
 
