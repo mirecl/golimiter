@@ -66,7 +66,7 @@ func Run(linters ...*Linter) {
 
 			for _, issue := range issues {
 				position := fmt.Sprintf("%s:%v", issue.Filename, issue.Line)
-				fmt.Printf("%s \033[31m%s: %s (%s)\033[0m\033[30m(%s)\033[0m\n", position, linter, issue.Message, issue.Code, issue.Hash)
+				fmt.Printf("%s \033[31m%s: %s. \033[0m\033[30m(%s)\033[0m\n", position, linter, issue.Message, issue.Hash)
 			}
 		}
 		return
