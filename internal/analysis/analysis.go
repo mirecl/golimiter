@@ -9,6 +9,8 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
+const Version string = "0.1.0"
+
 const loadMode = packages.NeedName |
 	packages.NeedFiles |
 	packages.NeedCompiledGoFiles |
@@ -43,7 +45,14 @@ func Run(linters ...*Linter) {
 	}
 
 	jsonFlag := flag.Bool("json", false, "format report")
+	versionFlag := flag.Bool("version", false, "get version golimiter")
+
 	flag.Parse()
+
+	if *versionFlag {
+		fmt.Printf("golimiter %s\n", Version)
+		return
+	}
 
 	if !*jsonFlag {
 		if len(allIssues) == 0 {
