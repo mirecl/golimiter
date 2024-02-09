@@ -9,7 +9,7 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-const Version string = "0.1.0"
+const Version string = "0.2.1"
 
 const loadMode = packages.NeedName |
 	packages.NeedFiles |
