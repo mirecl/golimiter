@@ -32,7 +32,7 @@ func NewNoNoLint() *analysis.Linter {
 	}
 }
 
-func runNoNoLint(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue { //nolint:
+func runNoNoLint(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue { //nolint:funlen
 	comments := make(map[string][]*ast.CommentGroup, len(pkgFiles))
 	for _, file := range pkgFiles {
 		comments[fset.Position(file.Pos()).Filename] = file.Comments
@@ -85,13 +85,15 @@ func GetCommentsByFunc(fn *ast.FuncDecl, fileComments []*ast.CommentGroup, fset 
 	var comments []FuncComment
 
 	for _, comment := range fileComments {
-		if fn.Body.Pos() <= comment.Pos() && comment.Pos() <= fn.Body.End() {
-			position := fset.Position(comment.Pos())
-			comments = append(comments, FuncComment{
-				Text:     comment.Text(),
-				Line:     position.Line,
-				Filename: position.Filename,
-			})
+		for _, c := range comment.List {
+			if fn.Body.Pos() <= c.Pos() && c.Pos() <= fn.Body.End() {
+				position := fset.Position(comment.Pos())
+				comments = append(comments, FuncComment{
+					Text:     c.Text,
+					Line:     position.Line,
+					Filename: position.Filename,
+				})
+			}
 		}
 	}
 
