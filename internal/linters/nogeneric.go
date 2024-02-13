@@ -13,7 +13,6 @@ import (
 
 const (
 	messageNoGeneric = "a `generic` statement forbidden to use"
-	codeNoGeneric    = "GL0001"
 )
 
 // NewNoGeneric create instance linter for check generic.
@@ -59,11 +58,7 @@ func runNoGeneric(pkgFiles []*ast.File, info *types.Info, fset *token.FileSet) [
 		position := fset.Position(node.Pos())
 
 		pkgIssues = append(pkgIssues, Issue{
-			Pos:      node.Pos(),
-			End:      node.End(),
-			Fset:     fset,
 			Message:  messageNoGeneric,
-			Code:     codeNoGeneric,
 			Line:     position.Line,
 			Filename: position.Filename,
 			Hash:     analysis.GetHash(fset, node.Pos(), node.End()),

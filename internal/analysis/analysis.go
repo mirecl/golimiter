@@ -9,7 +9,8 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-const Version string = "0.2.1"
+// Version golimiter linter.
+const Version string = "0.3.0"
 
 const loadMode = packages.NeedName |
 	packages.NeedFiles |
@@ -31,19 +32,8 @@ type Linter struct {
 	Run func([]*packages.Package) []Issue
 }
 
+// Run analyze source code.
 func Run(linters ...*Linter) {
-	pkgs, err := packages.Load(&packages.Config{Mode: loadMode, Tests: false}, "./...")
-	if err != nil {
-		log.Fatalf("failed load go/packages: %s", err)
-	}
-
-	allIssues := make(map[string][]Issue)
-
-	for _, linter := range linters {
-		issues := linter.Run(pkgs)
-		allIssues[linter.Name] = issues
-	}
-
 	jsonFlag := flag.Bool("json", false, "format report")
 	versionFlag := flag.Bool("version", false, "get version golimiter")
 
@@ -54,25 +44,28 @@ func Run(linters ...*Linter) {
 		return
 	}
 
-	if !*jsonFlag {
-		if len(allIssues) == 0 {
-			fmt.Println("")
-		}
+	pkgs, err := packages.Load(&packages.Config{Mode: loadMode, Tests: false}, "./...")
+	if err != nil {
+		log.Fatalf("failed load go/packages: %s", err)
+	}
 
-		for linter, issues := range allIssues {
-			if len(issues) == 0 {
-				continue
-			}
+	allIssues := make(map[string][]Issue, len(linters))
 
-			for _, issue := range issues {
-				position := fmt.Sprintf("%s:%v", issue.Filename, issue.Line)
-				fmt.Printf("%s \033[31m%s: %s. \033[0m\033[30m(%s)\033[0m\n", position, linter, issue.Message, issue.Hash)
-			}
+	for _, linter := range linters {
+		allIssues[linter.Name] = linter.Run(pkgs)
+	}
+
+	if *jsonFlag {
+		if allIssuesBytes, err := json.Marshal(allIssues); err == nil {
+			fmt.Println(string(allIssuesBytes))
 		}
 		return
 	}
 
-	if allIssuesBytes, err := json.Marshal(allIssues); err == nil {
-		fmt.Println(string(allIssuesBytes))
+	for linter, issues := range allIssues {
+		for _, issue := range issues {
+			position := fmt.Sprintf("%s:%v", issue.Filename, issue.Line)
+			fmt.Printf("%s \033[31m%s: %s. \033[0m\033[30m(%s)\033[0m\n", position, linter, issue.Message, issue.Hash)
+		}
 	}
 }
