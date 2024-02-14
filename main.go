@@ -17,5 +17,6 @@ func main() {
 		linters.NewNoGoroutine(),
 		linters.NewNoNoLint(),
 		linters.NewNoDefer(),
+		linters.NewNoLength(),
 	)
 }

@@ -34,12 +34,17 @@ type Issue struct {
 // 	return p
 // }
 
-func GetHash(fset *token.FileSet, start, end token.Pos) string {
+func GetHashFromPosition(fset *token.FileSet, start, end token.Pos) string {
 	b, err := os.ReadFile(fset.Position(start).Filename)
 	if err != nil {
 		return "Unknown"
 	}
 
 	hash := md5.Sum(b[fset.Position(start).Offset:fset.Position(end).Offset])
+	return hex.EncodeToString(hash[:])
+}
+
+func GetHashFromString(object string) string {
+	hash := md5.Sum([]byte(object))
 	return hex.EncodeToString(hash[:])
 }

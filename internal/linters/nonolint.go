@@ -32,7 +32,8 @@ func NewNoNoLint() *analysis.Linter {
 	}
 }
 
-func runNoNoLint(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue { //nolint:funlen
+// TODO: check nolint in struct
+func runNoNoLint(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue {
 	comments := make(map[string][]*ast.CommentGroup, len(pkgFiles))
 	for _, file := range pkgFiles {
 		comments[fset.Position(file.Pos()).Filename] = file.Comments
@@ -66,7 +67,7 @@ func runNoNoLint(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Iss
 				Message:  messageNoNoLint,
 				Line:     comment.Line,
 				Filename: comment.Filename,
-				Hash:     analysis.GetHash(fset, node.Pos(), node.End()),
+				Hash:     analysis.GetHashFromPosition(fset, node.Pos(), node.End()),
 			})
 
 		}

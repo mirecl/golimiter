@@ -31,6 +31,7 @@ func NewNoDefer() *analysis.Linter {
 	}
 }
 
+// TODO: check defer in func with name.
 func runNoDefer(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue {
 	nodeFilter := []ast.Node{(*ast.DeferStmt)(nil)}
 
@@ -51,7 +52,7 @@ func runNoDefer(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issu
 			Message:  messageNoGoroutine,
 			Line:     position.Line,
 			Filename: position.Filename,
-			Hash:     analysis.GetHash(fset, node.Pos(), node.End()),
+			Hash:     analysis.GetHashFromPosition(fset, node.Pos(), node.End()),
 		})
 	})
 

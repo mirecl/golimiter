@@ -31,6 +31,7 @@ func NewNoGoroutine() *analysis.Linter {
 	}
 }
 
+// TODO: check goroutine in func with name.
 func runNoGoroutine(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue {
 	nodeFilter := []ast.Node{(*ast.GoStmt)(nil)}
 
@@ -51,7 +52,7 @@ func runNoGoroutine(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []
 			Message:  messageNoGoroutine,
 			Line:     position.Line,
 			Filename: position.Filename,
-			Hash:     analysis.GetHash(fset, node.Pos(), node.End()),
+			Hash:     analysis.GetHashFromPosition(fset, node.Pos(), node.End()),
 		})
 	})
 

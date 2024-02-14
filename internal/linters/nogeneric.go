@@ -61,7 +61,7 @@ func runNoGeneric(pkgFiles []*ast.File, info *types.Info, fset *token.FileSet) [
 			Message:  messageNoGeneric,
 			Line:     position.Line,
 			Filename: position.Filename,
-			Hash:     analysis.GetHash(fset, node.Pos(), node.End()),
+			Hash:     analysis.GetHashFromPosition(fset, node.Pos(), node.End()),
 		})
 	})
 
