@@ -14,7 +14,7 @@ import (
 const MaxNoLength = 25
 
 const (
-	messageNoLength = "The permissible length name of the object has been exceeded"
+	messageNoLength = "The maximum object length must be"
 )
 
 // NewNoLength create instance linter for length object.
@@ -32,16 +32,6 @@ func NewNoLength() *analysis.Linter {
 			return issues
 		},
 	}
-}
-
-func VeryBigNameFunctionInPackageD() {
-
-}
-
-type VeryBigNameFunctionInPackageStruct struct {
-	Age                                     int
-	Summary2                                int
-	VeryBigNameFunctionInPackageStructField string
 }
 
 func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue {
@@ -71,7 +61,7 @@ func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Iss
 					position := fset.Position(node.Pos())
 
 					pkgIssues = append(pkgIssues, Issue{
-						Message:  fmt.Sprintf("%s - %d (max length %d)", messageNoLength, len(nType.Name.Name), MaxNoLength),
+						Message:  fmt.Sprintf("%s %d (now %d)", messageNoLength, MaxNoLength, len(nType.Name.Name)),
 						Line:     position.Line,
 						Filename: position.Filename,
 						Hash:     analysis.GetHashFromString(nType.Name.Name),
@@ -104,7 +94,7 @@ func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Iss
 					position := fset.Position(field.Pos())
 
 					pkgIssues = append(pkgIssues, Issue{
-						Message:  fmt.Sprintf("%s - %d (max length %d)", messageNoLength, len(fieldName), MaxNoLength),
+						Message:  fmt.Sprintf("%s %d (now %d)", messageNoLength, MaxNoLength, len(fieldName)),
 						Line:     position.Line,
 						Filename: position.Filename,
 						Hash:     analysis.GetHashFromString(fieldName),
@@ -123,7 +113,7 @@ func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Iss
 			position := fset.Position(node.Pos())
 
 			pkgIssues = append(pkgIssues, Issue{
-				Message:  fmt.Sprintf("%s - %d (max length %d)", messageNoLength, len(n.Name.Name), MaxNoLength),
+				Message:  fmt.Sprintf("%s %d (now %d)", messageNoLength, MaxNoLength, len(n.Name.Name)),
 				Line:     position.Line,
 				Filename: position.Filename,
 				Hash:     analysis.GetHashFromString(n.Name.Name),
