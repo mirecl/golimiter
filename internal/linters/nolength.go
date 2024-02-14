@@ -5,16 +5,21 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
+	"unicode"
 
 	"github.com/mirecl/golimiter/internal/analysis"
 	"golang.org/x/tools/go/ast/inspector"
 	"golang.org/x/tools/go/packages"
 )
 
-const MaxNoLength = 25
+const (
+	MaxLengthObject = 30
+	MaxSegmentCount = 5
+)
 
 const (
-	messageNoLength = "The maximum object length must be"
+	messageNoLength  = "The maximum length of object must be"
+	messageNoSegment = "The maximum count segment of object must be"
 )
 
 // NewNoLength create instance linter for length object.
@@ -32,6 +37,10 @@ func NewNoLength() *analysis.Linter {
 			return issues
 		},
 	}
+}
+
+type DrBigAlseFunctionVeryVeryTratatata struct {
+	DrBigAlseFunctionVeryVeryField string
 }
 
 func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue {
@@ -57,11 +66,23 @@ func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Iss
 					continue
 				}
 
-				if len(nType.Name.Name) > MaxNoLength {
+				if len(nType.Name.Name) > MaxLengthObject {
 					position := fset.Position(node.Pos())
 
 					pkgIssues = append(pkgIssues, Issue{
-						Message:  fmt.Sprintf("%s %d (now %d)", messageNoLength, MaxNoLength, len(nType.Name.Name)),
+						Message:  fmt.Sprintf("%s %d (now %d)", messageNoLength, MaxLengthObject, len(nType.Name.Name)),
+						Line:     position.Line,
+						Filename: position.Filename,
+						Hash:     analysis.GetHashFromString(nType.Name.Name),
+					})
+				}
+
+				segment := GetSegmentCount(nType.Name.Name)
+				if len(segment) > MaxSegmentCount {
+					position := fset.Position(node.Pos())
+
+					pkgIssues = append(pkgIssues, Issue{
+						Message:  fmt.Sprintf("%s %d (now %d)", messageNoSegment, MaxSegmentCount, len(segment)),
 						Line:     position.Line,
 						Filename: position.Filename,
 						Hash:     analysis.GetHashFromString(nType.Name.Name),
@@ -87,18 +108,27 @@ func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Iss
 					}
 
 					fieldName := field.Names[0].Name
-					if len(fieldName) <= MaxNoLength {
-						continue
+					if len(fieldName) > MaxLengthObject {
+						position := fset.Position(field.Pos())
+						pkgIssues = append(pkgIssues, Issue{
+							Message:  fmt.Sprintf("%s %d (now %d)", messageNoLength, MaxLengthObject, len(fieldName)),
+							Line:     position.Line,
+							Filename: position.Filename,
+							Hash:     analysis.GetHashFromString(fieldName),
+						})
 					}
 
-					position := fset.Position(field.Pos())
+					segment := GetSegmentCount(fieldName)
+					if len(segment) > MaxSegmentCount {
+						position := fset.Position(field.Pos())
 
-					pkgIssues = append(pkgIssues, Issue{
-						Message:  fmt.Sprintf("%s %d (now %d)", messageNoLength, MaxNoLength, len(fieldName)),
-						Line:     position.Line,
-						Filename: position.Filename,
-						Hash:     analysis.GetHashFromString(fieldName),
-					})
+						pkgIssues = append(pkgIssues, Issue{
+							Message:  fmt.Sprintf("%s %d (now %d)", messageNoSegment, MaxSegmentCount, len(segment)),
+							Line:     position.Line,
+							Filename: position.Filename,
+							Hash:     analysis.GetHashFromString(fieldName),
+						})
+					}
 				}
 			}
 		case *ast.FuncDecl:
@@ -106,20 +136,72 @@ func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Iss
 				return
 			}
 
-			if len(n.Name.Name) <= MaxNoLength {
-				return
+			if len(n.Name.Name) > MaxLengthObject {
+				position := fset.Position(node.Pos())
+
+				pkgIssues = append(pkgIssues, Issue{
+					Message:  fmt.Sprintf("%s %d (now %d)", messageNoLength, MaxLengthObject, len(n.Name.Name)),
+					Line:     position.Line,
+					Filename: position.Filename,
+					Hash:     analysis.GetHashFromString(n.Name.Name),
+				})
 			}
 
-			position := fset.Position(node.Pos())
+			segment := GetSegmentCount(n.Name.Name)
+			if len(segment) > MaxSegmentCount {
+				position := fset.Position(node.Pos())
 
-			pkgIssues = append(pkgIssues, Issue{
-				Message:  fmt.Sprintf("%s %d (now %d)", messageNoLength, MaxNoLength, len(n.Name.Name)),
-				Line:     position.Line,
-				Filename: position.Filename,
-				Hash:     analysis.GetHashFromString(n.Name.Name),
-			})
+				pkgIssues = append(pkgIssues, Issue{
+					Message:  fmt.Sprintf("%s %d (now %d)", messageNoSegment, MaxSegmentCount, len(segment)),
+					Line:     position.Line,
+					Filename: position.Filename,
+					Hash:     analysis.GetHashFromString(n.Name.Name),
+				})
+			}
 		}
 	})
 
 	return pkgIssues
+}
+
+func GetSegmentCount(text string) []string {
+	entries := []string{}
+	var runes [][]rune
+	lastClass := 0
+	class := 0
+	// split into fields based on class of unicode character
+	for _, t := range text {
+		switch {
+		case unicode.IsLower(t):
+			class = 1
+		case unicode.IsUpper(t):
+			class = 2
+		case unicode.IsDigit(t):
+			class = 3
+		default:
+			class = 4
+		}
+		if class == lastClass {
+			runes[len(runes)-1] = append(runes[len(runes)-1], t)
+		} else {
+			runes = append(runes, []rune{t})
+		}
+		lastClass = class
+	}
+
+	// handle upper case -> lower case sequences, e.g.
+	// "PDFL", "oader" -> "PDF", "Loader"
+	for i := 0; i < len(runes)-1; i++ {
+		if unicode.IsUpper(runes[i][0]) && unicode.IsLower(runes[i+1][0]) {
+			runes[i+1] = append([]rune{runes[i][len(runes[i])-1]}, runes[i+1]...)
+			runes[i] = runes[i][:len(runes[i])-1]
+		}
+	}
+	// construct []string from results
+	for _, s := range runes {
+		if len(s) > 0 {
+			entries = append(entries, string(s))
+		}
+	}
+	return entries
 }
