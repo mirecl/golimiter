@@ -42,7 +42,6 @@ func NewNoLength() *analysis.Linter {
 // TODO: add support ignore hash
 func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue {
 	nodeFilter := []ast.Node{
-		(*ast.FuncDecl)(nil),
 		(*ast.TypeSpec)(nil),
 		(*ast.Field)(nil),
 		(*ast.Ident)(nil),
@@ -114,11 +113,6 @@ func GetObjectName(node ast.Node) string {
 			return ""
 		}
 		return n.Names[0].Name
-	case *ast.FuncDecl:
-		if n.Name == nil {
-			return ""
-		}
-		return n.Name.Name
 	case *ast.Ident:
 		return n.Name
 	}
