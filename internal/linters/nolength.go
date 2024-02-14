@@ -22,6 +22,10 @@ const (
 	messageNoSegment = "Maximum allowed number of segments in identifier is"
 )
 
+type oiehvwvkjeriuuyeruyberuyberuerb struct {
+	oiehvwvkjeriuuyeruyberuyberuerb string
+}
+
 // NewNoLength create instance linter for length object.
 func NewNoLength() *analysis.Linter {
 	return &analysis.Linter{
@@ -44,7 +48,7 @@ func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Iss
 	nodeFilter := []ast.Node{
 		(*ast.TypeSpec)(nil),
 		(*ast.Field)(nil),
-		(*ast.Ident)(nil),
+		(*ast.FuncDecl)(nil),
 	}
 
 	inspect := inspector.New(pkgFiles)
@@ -113,8 +117,11 @@ func GetObjectName(node ast.Node) string {
 			return ""
 		}
 		return n.Names[0].Name
-	case *ast.Ident:
-		return n.Name
+	case *ast.FuncDecl:
+		if n.Name == nil {
+			return ""
+		}
+		return n.Name.Name
 	}
 	return ""
 }
