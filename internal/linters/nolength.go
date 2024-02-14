@@ -177,7 +177,8 @@ func GetSegmentCount(text string) []string {
 		case unicode.IsUpper(t):
 			class = 2
 		case unicode.IsDigit(t):
-			class = 3
+			// class = 3
+			continue
 		default:
 			class = 4
 		}
