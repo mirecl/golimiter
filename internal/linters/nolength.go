@@ -18,8 +18,8 @@ const (
 )
 
 const (
-	messageNoLength  = "The maximum length of object must be"
-	messageNoSegment = "The maximum count segment of object must be"
+	messageNoLength  = "Maximum allowed length of identifier is"
+	messageNoSegment = "Maximum allowed number of segments in identifier is"
 )
 
 // NewNoLength create instance linter for length object.
@@ -39,14 +39,13 @@ func NewNoLength() *analysis.Linter {
 	}
 }
 
-type DrBigAlseFunctionVeryVeryTratatata struct {
-	DrBigAlseFunctionVeryVeryField string
-}
-
+// TODO: add support ignore hash
 func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue {
 	nodeFilter := []ast.Node{
 		(*ast.FuncDecl)(nil),
-		(*ast.GenDecl)(nil),
+		(*ast.TypeSpec)(nil),
+		(*ast.Field)(nil),
+		(*ast.Ident)(nil),
 	}
 
 	inspect := inspector.New(pkgFiles)
@@ -54,113 +53,34 @@ func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Iss
 	var pkgIssues []Issue
 
 	inspect.Preorder(nodeFilter, func(node ast.Node) {
-		switch n := node.(type) {
-		case *ast.GenDecl:
-			for _, spec := range n.Specs {
-				nType, ok := spec.(*ast.TypeSpec)
-				if !ok {
-					continue
-				}
+		name := GetObjectName(node)
+		if name == "" {
+			return
+		}
 
-				if nType.Name == nil {
-					continue
-				}
+		if len(name) > MaxLengthObject {
+			position := fset.Position(node.Pos())
 
-				if len(nType.Name.Name) > MaxLengthObject {
-					position := fset.Position(node.Pos())
+			pkgIssues = append(pkgIssues, Issue{
+				Message:  fmt.Sprintf("%s %d (now %d)", messageNoLength, MaxLengthObject, len(name)),
+				Line:     position.Line,
+				Filename: position.Filename,
+				Hash:     analysis.GetHashFromString(name),
+			})
+		}
 
-					pkgIssues = append(pkgIssues, Issue{
-						Message:  fmt.Sprintf("%s %d (now `%s` %d)", messageNoLength, MaxLengthObject, nType.Name.Name, len(nType.Name.Name)),
-						Line:     position.Line,
-						Filename: position.Filename,
-						Hash:     analysis.GetHashFromString(nType.Name.Name),
-					})
-				}
+		segment := GetSegmentCount(name)
+		if segment > MaxSegmentCount {
+			position := fset.Position(node.Pos())
 
-				segment := GetSegmentCount(nType.Name.Name)
-				if segment > MaxSegmentCount {
-					position := fset.Position(node.Pos())
-
-					pkgIssues = append(pkgIssues, Issue{
-						Message:  fmt.Sprintf("%s %d (now `%s` %d)", messageNoSegment, MaxSegmentCount, nType.Name.Name, segment),
-						Line:     position.Line,
-						Filename: position.Filename,
-						Hash:     analysis.GetHashFromString(nType.Name.Name),
-					})
-				}
-
-				nFunc, ok := nType.Type.(*ast.StructType)
-				if !ok {
-					continue
-				}
-
-				if nFunc.Fields == nil {
-					continue
-				}
-
-				if nFunc.Fields.NumFields() == 0 {
-					continue
-				}
-
-				for _, field := range nFunc.Fields.List {
-					if len(field.Names) == 0 {
-						continue
-					}
-
-					fieldName := field.Names[0].Name
-					if len(fieldName) > MaxLengthObject {
-						position := fset.Position(field.Pos())
-						pkgIssues = append(pkgIssues, Issue{
-							Message:  fmt.Sprintf("%s %d (now `%s` %d)", messageNoLength, MaxLengthObject, fieldName, len(fieldName)),
-							Line:     position.Line,
-							Filename: position.Filename,
-							Hash:     analysis.GetHashFromString(fieldName),
-						})
-					}
-
-					segment := GetSegmentCount(fieldName)
-					if segment > MaxSegmentCount {
-						position := fset.Position(field.Pos())
-
-						pkgIssues = append(pkgIssues, Issue{
-							Message:  fmt.Sprintf("%s %d (now `%s` %d)", messageNoSegment, MaxSegmentCount, fieldName, segment),
-							Line:     position.Line,
-							Filename: position.Filename,
-							Hash:     analysis.GetHashFromString(fieldName),
-						})
-					}
-				}
-			}
-		case *ast.FuncDecl:
-			if n.Name == nil {
-				return
-			}
-
-			if len(n.Name.Name) > MaxLengthObject {
-				position := fset.Position(node.Pos())
-
-				pkgIssues = append(pkgIssues, Issue{
-					Message:  fmt.Sprintf("%s %d (now `%s` %d)", messageNoLength, MaxLengthObject, n.Name.Name, len(n.Name.Name)),
-					Line:     position.Line,
-					Filename: position.Filename,
-					Hash:     analysis.GetHashFromString(n.Name.Name),
-				})
-			}
-
-			segment := GetSegmentCount(n.Name.Name)
-			if segment > MaxSegmentCount {
-				position := fset.Position(node.Pos())
-
-				pkgIssues = append(pkgIssues, Issue{
-					Message:  fmt.Sprintf("%s %d (now `%s` %d)", messageNoSegment, MaxSegmentCount, n.Name.Name, segment),
-					Line:     position.Line,
-					Filename: position.Filename,
-					Hash:     analysis.GetHashFromString(n.Name.Name),
-				})
-			}
+			pkgIssues = append(pkgIssues, Issue{
+				Message:  fmt.Sprintf("%s %d (now %d)", messageNoSegment, MaxSegmentCount, segment),
+				Line:     position.Line,
+				Filename: position.Filename,
+				Hash:     analysis.GetHashFromString(name),
+			})
 		}
 	})
-
 	return pkgIssues
 }
 
@@ -180,4 +100,27 @@ func GetSegmentCount(text string) int {
 		isLastSymbolUpper = false
 	}
 	return c
+}
+
+func GetObjectName(node ast.Node) string {
+	switch n := node.(type) {
+	case *ast.TypeSpec:
+		if n.Name == nil {
+			return ""
+		}
+		return n.Name.Name
+	case *ast.Field:
+		if len(n.Names) == 0 {
+			return ""
+		}
+		return n.Names[0].Name
+	case *ast.FuncDecl:
+		if n.Name == nil {
+			return ""
+		}
+		return n.Name.Name
+	case *ast.Ident:
+		return n.Name
+	}
+	return ""
 }
