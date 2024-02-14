@@ -12,7 +12,6 @@ import (
 
 const (
 	messageNoInit = "a `init` funcs forbidden to use"
-	codeNoInit    = "GL0002"
 )
 
 // NewNoInit create instance linter for check func init.
@@ -55,14 +54,10 @@ func runNoInit(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue
 		position := fset.Position(node.Pos())
 
 		pkgIssues = append(pkgIssues, Issue{
-			Pos:      node.Pos(),
-			End:      node.End(),
-			Fset:     fset,
 			Message:  messageNoInit,
-			Code:     codeNoInit,
 			Line:     position.Line,
 			Filename: position.Filename,
-			Hash:     analysis.GetHash(fset, node.Pos(), node.End()),
+			Hash:     analysis.GetHashFromPosition(fset, node.Pos(), node.End()),
 		})
 	})
 

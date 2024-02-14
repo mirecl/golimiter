@@ -11,18 +11,18 @@ import (
 )
 
 const (
-	messageNoGoroutine = "a `goroutine` statement forbidden to use"
+	messageNoDefer = "a `defer` statement forbidden to use"
 )
 
-// NewNoGoroutine create instance linter for check goroutines.
-func NewNoGoroutine() *analysis.Linter {
+// NewNoDefer create instance linter for check defer.
+func NewNoDefer() *analysis.Linter {
 	return &analysis.Linter{
-		Name: "NoGoroutine",
+		Name: "NoDefer",
 		Run: func(pkgs []*packages.Package) []Issue {
 			issues := make([]Issue, 0)
 
 			for _, p := range pkgs {
-				pkgIssues := runNoGoroutine(p.Syntax, p.TypesInfo, p.Fset)
+				pkgIssues := runNoDefer(p.Syntax, p.TypesInfo, p.Fset)
 				issues = append(issues, pkgIssues...)
 			}
 
@@ -31,9 +31,9 @@ func NewNoGoroutine() *analysis.Linter {
 	}
 }
 
-// TODO: check goroutine in func with name.
-func runNoGoroutine(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue {
-	nodeFilter := []ast.Node{(*ast.GoStmt)(nil)}
+// TODO: check defer in func with name.
+func runNoDefer(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue {
+	nodeFilter := []ast.Node{(*ast.DeferStmt)(nil)}
 
 	inspect := inspector.New(pkgFiles)
 

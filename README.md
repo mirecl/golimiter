@@ -25,5 +25,7 @@
 # 📖 Checks
 
 * *NoInit* - set limit for `init` functions
-* *NoGoroutine* - set limit for `goroutine` statements
+* *NoGoroutine* - forbid usage of `goroutine`
 * *NoGeneric* - forbid usage of `generics`
+* *NoDefer* - forbid usage of `defer`
+* *NoNoLint* - forbid usage of `nolint`
