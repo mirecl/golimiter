@@ -14,7 +14,7 @@ import (
 
 const (
 	MaxLengthObject = 30
-	MaxSegmentCount = 5
+	MaxSegmentCount = 6
 )
 
 const (
