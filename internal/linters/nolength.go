@@ -70,7 +70,7 @@ func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Iss
 					position := fset.Position(node.Pos())
 
 					pkgIssues = append(pkgIssues, Issue{
-						Message:  fmt.Sprintf("%s %d (now %d)", messageNoLength, MaxLengthObject, len(nType.Name.Name)),
+						Message:  fmt.Sprintf("%s %d (now `%s` %d)", messageNoLength, MaxLengthObject, nType.Name.Name, len(nType.Name.Name)),
 						Line:     position.Line,
 						Filename: position.Filename,
 						Hash:     analysis.GetHashFromString(nType.Name.Name),
@@ -78,11 +78,11 @@ func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Iss
 				}
 
 				segment := GetSegmentCount(nType.Name.Name)
-				if len(segment) > MaxSegmentCount {
+				if segment > MaxSegmentCount {
 					position := fset.Position(node.Pos())
 
 					pkgIssues = append(pkgIssues, Issue{
-						Message:  fmt.Sprintf("%s %d (now %d)", messageNoSegment, MaxSegmentCount, len(segment)),
+						Message:  fmt.Sprintf("%s %d (now `%s` %d)", messageNoSegment, MaxSegmentCount, nType.Name.Name, segment),
 						Line:     position.Line,
 						Filename: position.Filename,
 						Hash:     analysis.GetHashFromString(nType.Name.Name),
@@ -111,7 +111,7 @@ func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Iss
 					if len(fieldName) > MaxLengthObject {
 						position := fset.Position(field.Pos())
 						pkgIssues = append(pkgIssues, Issue{
-							Message:  fmt.Sprintf("%s %d (now %d)", messageNoLength, MaxLengthObject, len(fieldName)),
+							Message:  fmt.Sprintf("%s %d (now `%s` %d)", messageNoLength, MaxLengthObject, fieldName, len(fieldName)),
 							Line:     position.Line,
 							Filename: position.Filename,
 							Hash:     analysis.GetHashFromString(fieldName),
@@ -119,11 +119,11 @@ func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Iss
 					}
 
 					segment := GetSegmentCount(fieldName)
-					if len(segment) > MaxSegmentCount {
+					if segment > MaxSegmentCount {
 						position := fset.Position(field.Pos())
 
 						pkgIssues = append(pkgIssues, Issue{
-							Message:  fmt.Sprintf("%s %d (now %d)", messageNoSegment, MaxSegmentCount, len(segment)),
+							Message:  fmt.Sprintf("%s %d (now `%s` %d)", messageNoSegment, MaxSegmentCount, fieldName, segment),
 							Line:     position.Line,
 							Filename: position.Filename,
 							Hash:     analysis.GetHashFromString(fieldName),
@@ -140,7 +140,7 @@ func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Iss
 				position := fset.Position(node.Pos())
 
 				pkgIssues = append(pkgIssues, Issue{
-					Message:  fmt.Sprintf("%s %d (now %d)", messageNoLength, MaxLengthObject, len(n.Name.Name)),
+					Message:  fmt.Sprintf("%s %d (now `%s` %d)", messageNoLength, MaxLengthObject, n.Name.Name, len(n.Name.Name)),
 					Line:     position.Line,
 					Filename: position.Filename,
 					Hash:     analysis.GetHashFromString(n.Name.Name),
@@ -148,11 +148,11 @@ func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Iss
 			}
 
 			segment := GetSegmentCount(n.Name.Name)
-			if len(segment) > MaxSegmentCount {
+			if segment > MaxSegmentCount {
 				position := fset.Position(node.Pos())
 
 				pkgIssues = append(pkgIssues, Issue{
-					Message:  fmt.Sprintf("%s %d (now %d)", messageNoSegment, MaxSegmentCount, len(segment)),
+					Message:  fmt.Sprintf("%s %d (now `%s` %d)", messageNoSegment, MaxSegmentCount, n.Name.Name, segment),
 					Line:     position.Line,
 					Filename: position.Filename,
 					Hash:     analysis.GetHashFromString(n.Name.Name),
@@ -164,45 +164,20 @@ func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Iss
 	return pkgIssues
 }
 
-func GetSegmentCount(text string) []string {
-	entries := []string{}
-	var runes [][]rune
-	lastClass := 0
-	class := 0
-	// split into fields based on class of unicode character
-	for _, t := range text {
-		switch {
-		case unicode.IsLower(t):
-			class = 1
-		case unicode.IsUpper(t):
-			class = 2
-		case unicode.IsDigit(t):
-			// class = 3
+func GetSegmentCount(text string) int {
+	c := 0
+	isLastSymbolUpper := true
+	for i, w := range text {
+		if unicode.IsLower(w) && i == 0 {
+			c++
 			continue
-		default:
-			class = 4
 		}
-		if class == lastClass {
-			runes[len(runes)-1] = append(runes[len(runes)-1], t)
-		} else {
-			runes = append(runes, []rune{t})
+		if unicode.IsUpper(w) && (!isLastSymbolUpper || i == 0) {
+			c++
+			isLastSymbolUpper = true
+			continue
 		}
-		lastClass = class
+		isLastSymbolUpper = false
 	}
-
-	// handle upper case -> lower case sequences, e.g.
-	// "PDFL", "oader" -> "PDF", "Loader"
-	for i := 0; i < len(runes)-1; i++ {
-		if unicode.IsUpper(runes[i][0]) && unicode.IsLower(runes[i+1][0]) {
-			runes[i+1] = append([]rune{runes[i][len(runes[i])-1]}, runes[i+1]...)
-			runes[i] = runes[i][:len(runes[i])-1]
-		}
-	}
-	// construct []string from results
-	for _, s := range runes {
-		if len(s) > 0 {
-			entries = append(entries, string(s))
-		}
-	}
-	return entries
+	return c
 }
