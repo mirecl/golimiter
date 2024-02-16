@@ -2,6 +2,8 @@ package config
 
 import (
 	"os"
+	"path/filepath"
+	"slices"
 	"time"
 
 	"golang.org/x/mod/modfile"
@@ -12,7 +14,7 @@ type ExcludeType []Exclude
 
 var Config ExcludeType
 
-func (e ExcludeType) IsCheck(hash string) bool {
+func (e ExcludeType) IsCheckHash(hash string) bool {
 	now := time.Now()
 	for _, exclude := range e {
 		if exclude.Hash == hash {
@@ -34,11 +36,33 @@ func (e ExcludeType) IsCheck(hash string) bool {
 	return false
 }
 
+func (e ExcludeType) IsCheckNoLint(path, name string, linters []string) bool {
+	dir, err := os.Getwd()
+	if err != nil {
+		return false
+	}
+
+	path, _ = filepath.Rel(dir, path)
+	for _, exclude := range e {
+		if exclude.Path == path && exclude.Name == name {
+			for _, linter := range linters {
+				if slices.Contains(exclude.Linters, linter) {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
 type Exclude struct {
-	Jira    string `yaml:"Jira"`
-	Comment string `yaml:"Comment"`
-	Before  string `yaml:"Before"`
-	Hash    string `yaml:"Hash"`
+	Jira    string   `yaml:"Jira"`
+	Comment string   `yaml:"Comment"`
+	Before  string   `yaml:"Before"`
+	Hash    string   `yaml:"Hash"`
+	Path    string   `yaml:"Path"`
+	Name    string   `yaml:"Name"`
+	Linters []string `yaml:"Linters"`
 }
 
 // Read load config file `.golimiter.yaml`.

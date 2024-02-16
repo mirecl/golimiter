@@ -27,11 +27,9 @@ type IgnoreScope struct {
 	fset    *token.FileSet
 }
 
-func (i *IgnoreScope) IsCheck(node ast.Node) bool {
-	hash := Hash(i.fset, node)
-
+func (i *IgnoreScope) IsCheck(hash string) bool {
 	for _, object := range i.objects {
-		if object.Hash == hash && config.Config.IsCheck(hash) {
+		if object.Hash == hash && config.Config.IsCheckHash(hash) {
 			return true
 		}
 	}

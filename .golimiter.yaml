@@ -3,3 +3,10 @@ github.com/mirecl/golimiter:
     Jira: test
     Comment: test
     Before: 31.12.2023
+  - Path: internal/linters/nonolint.go
+    Comment: test
+    Name: NewNoNoLint
+    Linters:
+      - funclen
+      - gosec
+  - Hash: 066f08f7592afbeb5eba003154224a48

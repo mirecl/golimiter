@@ -51,7 +51,8 @@ func runNoGeneric(pkgFiles []*ast.File, info *types.Info, fset *token.FileSet) [
 			return
 		}
 
-		if ignoreObjects.IsCheck(node) {
+		hash := analysis.GetHashFromPosition(fset, node)
+		if ignoreObjects.IsCheck(hash) {
 			return
 		}
 
@@ -61,7 +62,7 @@ func runNoGeneric(pkgFiles []*ast.File, info *types.Info, fset *token.FileSet) [
 			Message:  messageNoGeneric,
 			Line:     position.Line,
 			Filename: position.Filename,
-			Hash:     analysis.GetHashFromPosition(fset, node.Pos(), node.End()),
+			Hash:     hash,
 		})
 	})
 

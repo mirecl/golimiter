@@ -42,7 +42,8 @@ func runNoGoroutine(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []
 	ignoreObjects := GetIgnore(pkgFiles, fset)
 
 	inspect.Preorder(nodeFilter, func(node ast.Node) {
-		if ignoreObjects.IsCheck(node) {
+		hash := analysis.GetHashFromPosition(fset, node)
+		if ignoreObjects.IsCheck(hash) {
 			return
 		}
 
@@ -52,7 +53,7 @@ func runNoGoroutine(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []
 			Message:  messageNoGoroutine,
 			Line:     position.Line,
 			Filename: position.Filename,
-			Hash:     analysis.GetHashFromPosition(fset, node.Pos(), node.End()),
+			Hash:     hash,
 		})
 	})
 

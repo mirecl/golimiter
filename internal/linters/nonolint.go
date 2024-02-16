@@ -4,9 +4,11 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
+	"regexp"
 	"strings"
 
 	"github.com/mirecl/golimiter/internal/analysis"
+	"github.com/mirecl/golimiter/internal/config"
 	"golang.org/x/tools/go/ast/inspector"
 	"golang.org/x/tools/go/packages"
 )
@@ -14,6 +16,8 @@ import (
 const (
 	messageNoNoLint = "a `nolint` comment forbidden to use"
 )
+
+var noLintRe = regexp.MustCompile(`nolint:(.*?)(\s|$)`)
 
 // NewNoNoLint create instance linter for check func nolint.
 func NewNoNoLint() *analysis.Linter {
@@ -55,11 +59,20 @@ func runNoNoLint(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Iss
 		file := fset.Position(node.Pos()).Filename
 		commentsFunc := GetCommentsByFunc(nFuncDecl, comments[file], fset)
 		for _, comment := range commentsFunc {
-			if !strings.Contains(comment.Text, "nolint:") {
+			b := noLintRe.FindStringSubmatch(comment.Text)
+			if len(b) == 0 {
 				continue
 			}
 
-			if ignoreObjects.IsCheck(node) {
+			if nFuncDecl.Name != nil {
+				lintres := strings.Split(b[1], ",")
+				if config.Config.IsCheckNoLint(comment.Filename, nFuncDecl.Name.Name, lintres) {
+					continue
+				}
+			}
+
+			hash := analysis.GetHashFromPosition(fset, node)
+			if ignoreObjects.IsCheck(hash) {
 				continue
 			}
 
@@ -67,9 +80,8 @@ func runNoNoLint(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Iss
 				Message:  messageNoNoLint,
 				Line:     comment.Line,
 				Filename: comment.Filename,
-				Hash:     analysis.GetHashFromPosition(fset, node.Pos(), node.End()),
+				Hash:     hash,
 			})
-
 		}
 	})
 

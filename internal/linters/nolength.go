@@ -22,10 +22,6 @@ const (
 	messageNoSegment = "Maximum allowed number of segments in identifier is"
 )
 
-type oiehvwvkjeriuuyeruyberuyberuerb struct {
-	oiehvwvkjeriuuyeruyberuyberuerb string
-}
-
 // NewNoLength create instance linter for length object.
 func NewNoLength() *analysis.Linter {
 	return &analysis.Linter{
@@ -43,7 +39,7 @@ func NewNoLength() *analysis.Linter {
 	}
 }
 
-// TODO: add support ignore hash
+// TODO: add support ignore hash.
 func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue {
 	nodeFilter := []ast.Node{
 		(*ast.TypeSpec)(nil),
@@ -52,12 +48,18 @@ func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Iss
 	}
 
 	inspect := inspector.New(pkgFiles)
+	ignoreObjects := GetIgnore(pkgFiles, fset)
 
 	var pkgIssues []Issue
 
 	inspect.Preorder(nodeFilter, func(node ast.Node) {
 		name := GetObjectName(node)
 		if name == "" {
+			return
+		}
+
+		hash := analysis.GetHashFromString(name)
+		if ignoreObjects.IsCheck(hash) {
 			return
 		}
 
@@ -68,7 +70,7 @@ func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Iss
 				Message:  fmt.Sprintf("%s %d (now %d)", messageNoLength, MaxLengthObject, len(name)),
 				Line:     position.Line,
 				Filename: position.Filename,
-				Hash:     analysis.GetHashFromString(name),
+				Hash:     hash,
 			})
 		}
 

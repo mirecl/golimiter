@@ -47,7 +47,8 @@ func runNoInit(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue
 			return
 		}
 
-		if ignoreObjects.IsCheck(node) {
+		hash := analysis.GetHashFromPosition(fset, node)
+		if ignoreObjects.IsCheck(hash) {
 			return
 		}
 
@@ -57,7 +58,7 @@ func runNoInit(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue
 			Message:  messageNoInit,
 			Line:     position.Line,
 			Filename: position.Filename,
-			Hash:     analysis.GetHashFromPosition(fset, node.Pos(), node.End()),
+			Hash:     hash,
 		})
 	})
 

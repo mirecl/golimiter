@@ -3,16 +3,14 @@ package analysis
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"go/ast"
 	"go/token"
 	"os"
 )
 
 // Issue problem in analysis.
 type Issue struct {
-	Message string `json:"message"`
-	// Pos      token.Pos      `json:"omitempty"`
-	// End      token.Pos      `json:"omitempty"`
-	// Fset     *token.FileSet `json:"omitempty"`
+	Message  string `json:"message"`
 	Filename string `json:"filename"`
 	Line     int    `json:"line"`
 	Hash     string `json:"hash"`
@@ -34,13 +32,13 @@ type Issue struct {
 // 	return p
 // }
 
-func GetHashFromPosition(fset *token.FileSet, start, end token.Pos) string {
-	b, err := os.ReadFile(fset.Position(start).Filename)
+func GetHashFromPosition(fset *token.FileSet, node ast.Node) string {
+	b, err := os.ReadFile(fset.Position(node.Pos()).Filename)
 	if err != nil {
 		return "Unknown"
 	}
 
-	hash := md5.Sum(b[fset.Position(start).Offset:fset.Position(end).Offset])
+	hash := md5.Sum(b[fset.Position(node.Pos()).Offset:fset.Position(node.End()).Offset])
 	return hex.EncodeToString(hash[:])
 }
 
