@@ -140,7 +140,7 @@ func ReadConfig() (*Config, error) {
 
 	body, err := os.ReadFile(".golimiter.yaml")
 	if err != nil {
-		return nil, err
+		return &Config{}, nil
 	}
 
 	if err := yaml.Unmarshal(body, &config); err != nil {
