@@ -137,6 +137,7 @@ func ReadLine(path string, line int) string {
 	if err != nil {
 		return ""
 	}
+
 	defer file.Close() //nolint:errcheck
 
 	scanner := bufio.NewScanner(file)

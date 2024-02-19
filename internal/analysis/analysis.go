@@ -4,10 +4,12 @@ import (
 	"bufio"
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"go/ast"
 	"go/token"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"golang.org/x/tools/go/packages"
@@ -50,12 +52,16 @@ func Run(cfg *Config, linters ...*Linter) map[string][]Issue {
 }
 
 func GetHashFromBody(fset *token.FileSet, node ast.Node) string {
-	b, err := os.ReadFile(fset.Position(node.Pos()).Filename)
+	filename := fset.Position(node.Pos()).Filename
+	filename = GetPathRelative(filename)
+
+	b, err := os.ReadFile(filename)
 	if err != nil {
 		return ""
 	}
 
 	body := b[fset.Position(node.Pos()).Offset:fset.Position(node.End()).Offset]
+	body = append(body, []byte(filename)...)
 	return GetHashFromBytes(body)
 }
 
@@ -69,7 +75,10 @@ func GetHashFromBytes(object []byte) string {
 }
 
 func GetHashFromBodyByLine(fset *token.FileSet, node ast.Node, line int) string {
-	file, err := os.Open(fset.Position(node.Pos()).Filename)
+	filename := fset.Position(node.Pos()).Filename
+	filename = GetPathRelative(filename)
+
+	file, err := os.Open(filename)
 	if err != nil {
 		return ""
 	}
@@ -84,9 +93,22 @@ func GetHashFromBodyByLine(fset *token.FileSet, node ast.Node, line int) string 
 			continue
 		}
 
-		body := strings.TrimSpace(scanner.Text())
+		body := fmt.Sprintf("%s_%s", strings.TrimSpace(scanner.Text()), filename)
 		return GetHashFromString(body)
 	}
 
 	return ""
+}
+
+func GetPathRelative(path string) string {
+	dir, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+
+	path, err = filepath.Rel(dir, path)
+	if err != nil {
+		panic(err)
+	}
+	return path
 }

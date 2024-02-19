@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/mirecl/golimiter/internal/analysis"
 	"github.com/mirecl/golimiter/internal/linters"
@@ -48,21 +46,8 @@ func main() {
 
 	for linter, issues := range allIssues {
 		for _, issue := range issues {
-			position := fmt.Sprintf("%s:%v", GetPathRelative(issue.Filename), issue.Line)
+			position := fmt.Sprintf("%s:%v", analysis.GetPathRelative(issue.Filename), issue.Line)
 			fmt.Printf("%s \033[31m%s: %s. \033[0m\033[30m(%s)\033[0m\n", position, linter, issue.Message, issue.Hash)
 		}
 	}
-}
-
-func GetPathRelative(path string) string {
-	dir, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-
-	path, err = filepath.Rel(dir, path)
-	if err != nil {
-		panic(err)
-	}
-	return path
 }
