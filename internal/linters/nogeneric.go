@@ -2,11 +2,9 @@ package linters
 
 import (
 	"go/ast"
-	"go/token"
 	"go/types"
 
 	"github.com/mirecl/golimiter/internal/analysis"
-
 	"golang.org/x/tools/go/ast/inspector"
 	"golang.org/x/tools/go/packages"
 )
@@ -20,11 +18,11 @@ const (
 func NewNoGeneric() *analysis.Linter {
 	return &analysis.Linter{
 		Name: "NoGeneric",
-		Run: func(pkgs []*packages.Package) []Issue {
+		Run: func(cfg *analysis.Config, pkgs []*packages.Package) []analysis.Issue {
 			issues := make([]analysis.Issue, 0)
 
-			for _, p := range pkgs {
-				pkgIssues := runNoGeneric(p.Syntax, p.TypesInfo, p.Fset)
+			for _, pkg := range pkgs {
+				pkgIssues := runNoGeneric(&cfg.NoGeneric, pkg)
 				issues = append(issues, pkgIssues...)
 			}
 
@@ -33,32 +31,30 @@ func NewNoGeneric() *analysis.Linter {
 	}
 }
 
-func runNoGeneric(pkgFiles []*ast.File, info *types.Info, fset *token.FileSet) []Issue {
+func runNoGeneric(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []analysis.Issue {
 	nodeFilter := []ast.Node{
 		(*ast.FuncType)(nil),
 		(*ast.InterfaceType)(nil),
 		(*ast.TypeSpec)(nil),
 	}
 
-	ignoreObjects := GetIgnore(pkgFiles, fset)
+	inspect := inspector.New(pkg.Syntax)
 
-	inspect := inspector.New(pkgFiles)
-
-	var pkgIssues []Issue
+	var pkgIssues []analysis.Issue
 
 	inspect.Preorder(nodeFilter, func(node ast.Node) {
-		if !IsGeneric(node, info) {
+		if !IsGeneric(node, pkg.TypesInfo) {
 			return
 		}
 
-		hash := analysis.GetHashFromPosition(fset, node)
-		if ignoreObjects.IsCheck(hash) {
+		hash := analysis.GetHashFromBody(pkg.Fset, node)
+		if cfg.IsVerifyHash(hash) {
 			return
 		}
 
-		position := fset.Position(node.Pos())
+		position := pkg.Fset.Position(node.Pos())
 
-		pkgIssues = append(pkgIssues, Issue{
+		pkgIssues = append(pkgIssues, analysis.Issue{
 			Message:  messageNoGeneric,
 			Line:     position.Line,
 			Filename: position.Filename,

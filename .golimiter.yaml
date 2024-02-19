@@ -1,12 +1,17 @@
+# Before format time.Time 2015-02-24T00:00:00.0Z
 github.com/mirecl/golimiter:
-  - Hash: abb89714b4168bac204ec8c16e16a631
-    Jira: test
-    Comment: test
-    Before: 31.12.2023
-  - Path: internal/linters/nonolint.go
-    Comment: test
-    Name: NewNoNoLint
-    Linters:
-      - funclen
-      - gosec
-  - Hash: 066f08f7592afbeb5eba003154224a48
+  NoDefer:
+    ExcludeHashs:
+      - Hash: 0bff829e6d33b41c2f968f3bfa9b17cf
+        Comment: Close file (`internal/analysis/issues.go` and `internal/linters/nonolint.go`)
+  NoNoLint:
+    ExcludeNames:
+      - Position:
+          Name: NewNoInit
+          Path: internal/linters/noinit.go
+          Comment: New instance linter
+        Linters:
+          - dupl
+    ExcludeHashs:
+      - Hash: 77e2f01d7e9724570ab45a7018fe0055
+        Comment: No check error (`errcheck`) on close file `internal/linters/nonolint.go` in func `ReadLine`

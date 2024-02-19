@@ -3,8 +3,6 @@ package linters
 import (
 	"fmt"
 	"go/ast"
-	"go/token"
-	"go/types"
 	"unicode"
 
 	"github.com/mirecl/golimiter/internal/analysis"
@@ -18,19 +16,19 @@ const (
 )
 
 const (
-	messageNoLength  = "Maximum allowed length of identifier is"
-	messageNoSegment = "Maximum allowed number of segments in identifier is"
+	messageNoLengthLength  = "Maximum allowed length of identifier is"
+	messageNoLengthSegment = "Maximum allowed number of segments in identifier is"
 )
 
 // NewNoLength create instance linter for length object.
 func NewNoLength() *analysis.Linter {
 	return &analysis.Linter{
 		Name: "NoLength",
-		Run: func(pkgs []*packages.Package) []Issue {
-			issues := make([]Issue, 0)
+		Run: func(cfg *analysis.Config, pkgs []*packages.Package) []analysis.Issue {
+			issues := make([]analysis.Issue, 0)
 
-			for _, p := range pkgs {
-				pkgIssues := runNoLength(p.Syntax, p.TypesInfo, p.Fset)
+			for _, pkg := range pkgs {
+				pkgIssues := runNoLength(&cfg.NoLength, pkg)
 				issues = append(issues, pkgIssues...)
 			}
 
@@ -40,17 +38,16 @@ func NewNoLength() *analysis.Linter {
 }
 
 // TODO: add support ignore hash.
-func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue {
+func runNoLength(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []analysis.Issue {
 	nodeFilter := []ast.Node{
 		(*ast.TypeSpec)(nil),
 		(*ast.Field)(nil),
 		(*ast.FuncDecl)(nil),
 	}
 
-	inspect := inspector.New(pkgFiles)
-	ignoreObjects := GetIgnore(pkgFiles, fset)
+	inspect := inspector.New(pkg.Syntax)
 
-	var pkgIssues []Issue
+	var pkgIssues []analysis.Issue
 
 	inspect.Preorder(nodeFilter, func(node ast.Node) {
 		name := GetObjectName(node)
@@ -59,15 +56,15 @@ func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Iss
 		}
 
 		hash := analysis.GetHashFromString(name)
-		if ignoreObjects.IsCheck(hash) {
+		if cfg.IsVerifyHash(hash) {
 			return
 		}
 
 		if len(name) > MaxLengthObject {
-			position := fset.Position(node.Pos())
+			position := pkg.Fset.Position(node.Pos())
 
-			pkgIssues = append(pkgIssues, Issue{
-				Message:  fmt.Sprintf("%s %d (now %d)", messageNoLength, MaxLengthObject, len(name)),
+			pkgIssues = append(pkgIssues, analysis.Issue{
+				Message:  fmt.Sprintf("%s %d (now %d)", messageNoLengthLength, MaxLengthObject, len(name)),
 				Line:     position.Line,
 				Filename: position.Filename,
 				Hash:     hash,
@@ -76,10 +73,10 @@ func runNoLength(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Iss
 
 		segment := GetSegmentCount(name)
 		if segment > MaxSegmentCount {
-			position := fset.Position(node.Pos())
+			position := pkg.Fset.Position(node.Pos())
 
-			pkgIssues = append(pkgIssues, Issue{
-				Message:  fmt.Sprintf("%s %d (now %d)", messageNoSegment, MaxSegmentCount, segment),
+			pkgIssues = append(pkgIssues, analysis.Issue{
+				Message:  fmt.Sprintf("%s %d (now %d)", messageNoLengthSegment, MaxSegmentCount, segment),
 				Line:     position.Line,
 				Filename: position.Filename,
 				Hash:     analysis.GetHashFromString(name),

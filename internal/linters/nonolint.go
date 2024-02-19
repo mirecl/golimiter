@@ -1,14 +1,15 @@
 package linters
 
 import (
+	"bufio"
 	"go/ast"
 	"go/token"
-	"go/types"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/mirecl/golimiter/internal/analysis"
-	"github.com/mirecl/golimiter/internal/config"
 	"golang.org/x/tools/go/ast/inspector"
 	"golang.org/x/tools/go/packages"
 )
@@ -23,12 +24,11 @@ var noLintRe = regexp.MustCompile(`nolint:(.*?)(\s|$)`)
 func NewNoNoLint() *analysis.Linter {
 	return &analysis.Linter{
 		Name: "NoNoLint",
-		Run: func(pkgs []*packages.Package) []Issue {
-			issues := make([]Issue, 0)
+		Run: func(cfg *analysis.Config, pkgs []*packages.Package) []analysis.Issue {
+			issues := make([]analysis.Issue, 0)
 
-			for _, p := range pkgs {
-				pkgIssues := runNoNoLint(p.Syntax, p.TypesInfo, p.Fset)
-				issues = append(issues, pkgIssues...)
+			for _, pkg := range pkgs {
+				issues = append(issues, runNoNoLint(&cfg.NoNoLint, pkg)...)
 			}
 
 			return issues
@@ -36,47 +36,52 @@ func NewNoNoLint() *analysis.Linter {
 	}
 }
 
-// TODO: check nolint in struct
-func runNoNoLint(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue {
-	comments := make(map[string][]*ast.CommentGroup, len(pkgFiles))
-	for _, file := range pkgFiles {
-		comments[fset.Position(file.Pos()).Filename] = file.Comments
+// TODO: check nolint in struct.
+func runNoNoLint(cfg *analysis.ConfigNoNoLint, pkg *packages.Package) []analysis.Issue {
+	comments := make(map[string][]*ast.CommentGroup, len(pkg.Syntax))
+	for _, file := range pkg.Syntax {
+		comments[pkg.Fset.Position(file.Pos()).Filename] = file.Comments
 	}
 
 	nodeFilter := []ast.Node{
 		(*ast.FuncDecl)(nil),
 	}
 
-	ignoreObjects := GetIgnore(pkgFiles, fset)
+	inspect := inspector.New(pkg.Syntax)
 
-	inspect := inspector.New(pkgFiles)
-
-	var pkgIssues []Issue
+	var pkgIssues []analysis.Issue
 
 	inspect.Preorder(nodeFilter, func(node ast.Node) {
+		var hash string
+
 		nFuncDecl, _ := node.(*ast.FuncDecl)
 
-		file := fset.Position(node.Pos()).Filename
-		commentsFunc := GetCommentsByFunc(nFuncDecl, comments[file], fset)
+		file := pkg.Fset.Position(node.Pos()).Filename
+		commentsFunc := GetCommentsByFunc(nFuncDecl, comments[file], pkg.Fset)
 		for _, comment := range commentsFunc {
-			b := noLintRe.FindStringSubmatch(comment.Text)
-			if len(b) == 0 {
+			res := noLintRe.FindStringSubmatch(comment.Text)
+			if len(res) == 0 {
 				continue
 			}
 
 			if nFuncDecl.Name != nil {
-				lintres := strings.Split(b[1], ",")
-				if config.Config.IsCheckNoLint(comment.Filename, nFuncDecl.Name.Name, lintres) {
+				linters := strings.Split(res[1], ",")
+				if cfg.IsVerifyName(comment.Filename, nFuncDecl.Name.Name, linters) {
 					continue
 				}
 			}
 
-			hash := analysis.GetHashFromPosition(fset, node)
-			if ignoreObjects.IsCheck(hash) {
+			if comment.IsDoc {
+				hash = analysis.GetHashFromBody(pkg.Fset, node)
+			} else {
+				hash = analysis.GetHashFromBodyByLine(pkg.Fset, node, comment.Line)
+			}
+
+			if cfg.IsVerifyHash(hash) {
 				continue
 			}
 
-			pkgIssues = append(pkgIssues, Issue{
+			pkgIssues = append(pkgIssues, analysis.Issue{
 				Message:  messageNoNoLint,
 				Line:     comment.Line,
 				Filename: comment.Filename,
@@ -92,6 +97,7 @@ type FuncComment struct {
 	Text     string
 	Line     int
 	Filename string
+	IsDoc    bool
 }
 
 func GetCommentsByFunc(fn *ast.FuncDecl, fileComments []*ast.CommentGroup, fset *token.FileSet) []FuncComment {
@@ -105,6 +111,7 @@ func GetCommentsByFunc(fn *ast.FuncDecl, fileComments []*ast.CommentGroup, fset 
 					Text:     c.Text,
 					Line:     position.Line,
 					Filename: position.Filename,
+					IsDoc:    false,
 				})
 			}
 		}
@@ -117,9 +124,29 @@ func GetCommentsByFunc(fn *ast.FuncDecl, fileComments []*ast.CommentGroup, fset 
 				Text:     comment.Text,
 				Line:     position.Line,
 				Filename: position.Filename,
+				IsDoc:    true,
 			})
 		}
 	}
 
 	return comments
+}
+
+func ReadLine(path string, line int) string {
+	file, err := os.Open(filepath.Clean(path))
+	if err != nil {
+		return ""
+	}
+	defer file.Close() //nolint:errcheck
+
+	scanner := bufio.NewScanner(file)
+	i := 0
+	for scanner.Scan() {
+		i++
+		if i != line {
+			continue
+		}
+		return strings.TrimSpace(scanner.Text())
+	}
+	return ""
 }

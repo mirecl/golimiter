@@ -2,8 +2,6 @@ package linters
 
 import (
 	"go/ast"
-	"go/token"
-	"go/types"
 
 	"github.com/mirecl/golimiter/internal/analysis"
 	"golang.org/x/tools/go/ast/inspector"
@@ -15,14 +13,16 @@ const (
 )
 
 // NewNoInit create instance linter for check func init.
+//
+//nolint:dupl
 func NewNoInit() *analysis.Linter {
 	return &analysis.Linter{
 		Name: "NoInit",
-		Run: func(pkgs []*packages.Package) []Issue {
-			issues := make([]Issue, 0)
+		Run: func(cfg *analysis.Config, pkgs []*packages.Package) []analysis.Issue {
+			issues := make([]analysis.Issue, 0)
 
-			for _, p := range pkgs {
-				pkgIssues := runNoInit(p.Syntax, p.TypesInfo, p.Fset)
+			for _, pkg := range pkgs {
+				pkgIssues := runNoInit(&cfg.NoInit, pkg)
 				issues = append(issues, pkgIssues...)
 			}
 
@@ -31,14 +31,12 @@ func NewNoInit() *analysis.Linter {
 	}
 }
 
-func runNoInit(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue {
+func runNoInit(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []analysis.Issue {
 	nodeFilter := []ast.Node{(*ast.FuncDecl)(nil)}
 
-	inspect := inspector.New(pkgFiles)
+	inspect := inspector.New(pkg.Syntax)
 
-	var pkgIssues []Issue
-
-	ignoreObjects := GetIgnore(pkgFiles, fset)
+	var pkgIssues []analysis.Issue
 
 	inspect.Preorder(nodeFilter, func(node ast.Node) {
 		fn, _ := node.(*ast.FuncDecl)
@@ -47,14 +45,14 @@ func runNoInit(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue
 			return
 		}
 
-		hash := analysis.GetHashFromPosition(fset, node)
-		if ignoreObjects.IsCheck(hash) {
+		hash := analysis.GetHashFromBody(pkg.Fset, node)
+		if cfg.IsVerifyHash(hash) {
 			return
 		}
 
-		position := fset.Position(node.Pos())
+		position := pkg.Fset.Position(node.Pos())
 
-		pkgIssues = append(pkgIssues, Issue{
+		pkgIssues = append(pkgIssues, analysis.Issue{
 			Message:  messageNoInit,
 			Line:     position.Line,
 			Filename: position.Filename,
@@ -63,7 +61,7 @@ func runNoInit(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue
 	})
 
 	if len(pkgIssues) == 1 {
-		return []Issue{}
+		return []analysis.Issue{}
 	}
 
 	return pkgIssues

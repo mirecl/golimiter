@@ -2,8 +2,6 @@ package linters
 
 import (
 	"go/ast"
-	"go/token"
-	"go/types"
 
 	"github.com/mirecl/golimiter/internal/analysis"
 	"golang.org/x/tools/go/ast/inspector"
@@ -18,11 +16,11 @@ const (
 func NewNoDefer() *analysis.Linter {
 	return &analysis.Linter{
 		Name: "NoDefer",
-		Run: func(pkgs []*packages.Package) []Issue {
-			issues := make([]Issue, 0)
+		Run: func(cfg *analysis.Config, pkgs []*packages.Package) []analysis.Issue {
+			issues := make([]analysis.Issue, 0)
 
-			for _, p := range pkgs {
-				pkgIssues := runNoDefer(p.Syntax, p.TypesInfo, p.Fset)
+			for _, pkg := range pkgs {
+				pkgIssues := runNoDefer(&cfg.NoDefer, pkg)
 				issues = append(issues, pkgIssues...)
 			}
 
@@ -32,25 +30,23 @@ func NewNoDefer() *analysis.Linter {
 }
 
 // TODO: check defer in func with name.
-func runNoDefer(pkgFiles []*ast.File, _ *types.Info, fset *token.FileSet) []Issue {
+func runNoDefer(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []analysis.Issue {
 	nodeFilter := []ast.Node{(*ast.DeferStmt)(nil)}
 
-	inspect := inspector.New(pkgFiles)
+	inspect := inspector.New(pkg.Syntax)
 
-	var pkgIssues []Issue
-
-	ignoreObjects := GetIgnore(pkgFiles, fset)
+	var pkgIssues []analysis.Issue
 
 	inspect.Preorder(nodeFilter, func(node ast.Node) {
-		hash := analysis.GetHashFromPosition(fset, node)
-		if ignoreObjects.IsCheck(hash) {
+		hash := analysis.GetHashFromBody(pkg.Fset, node)
+		if cfg.IsVerifyHash(hash) {
 			return
 		}
 
-		position := fset.Position(node.Pos())
+		position := pkg.Fset.Position(node.Pos())
 
-		pkgIssues = append(pkgIssues, Issue{
-			Message:  messageNoGoroutine,
+		pkgIssues = append(pkgIssues, analysis.Issue{
+			Message:  messageNoDefer,
 			Line:     position.Line,
 			Filename: position.Filename,
 			Hash:     hash,
