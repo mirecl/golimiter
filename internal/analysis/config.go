@@ -17,6 +17,7 @@ type Config struct {
 	NoDefer     ConfigDefaultLinter `yaml:"NoDefer"`
 	NoInit      ConfigDefaultLinter `yaml:"NoInit"`
 	NoGeneric   ConfigDefaultLinter `yaml:"NoGeneric"`
+	NoPrefix    ConfigDefaultLinter `yaml:"NoPrefix"`
 }
 
 type ConfigDefaultLinter struct {

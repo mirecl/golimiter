@@ -35,6 +35,7 @@ func main() {
 		linters.NewNoNoLint(),
 		linters.NewNoDefer(),
 		linters.NewNoLength(),
+		linters.NewNoPrefix(),
 	)
 
 	if *jsonFlag {
