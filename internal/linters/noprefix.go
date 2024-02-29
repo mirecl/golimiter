@@ -29,8 +29,8 @@ func NewNoPrefix() *analysis.Linter {
 			issues := make([]analysis.Issue, 0)
 
 			for _, pkg := range pkgs {
-				pkgIssues := runNoPrefix(&cfg.NoPrefix, pkg)
-				issues = append(issues, pkgIssues...)
+				issues = append(issues, runNoPrefix(&cfg.NoPrefix, pkg)...)
+				issues = append(issues, runNoCommonPrefix(&cfg.NoPrefix, pkg)...)
 			}
 
 			return issues
@@ -86,6 +86,65 @@ func runNoPrefix(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []ana
 			Hash:     hash,
 		})
 	})
+
+	return pkgIssues
+}
+
+func runNoCommonPrefix(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) (pkgIssues []analysis.Issue) {
+
+	inspect := inspector.New(pkg.Syntax)
+
+	nodeFilter := []ast.Node{(*ast.TypeSpec)(nil)}
+
+	inspect.Preorder(nodeFilter,
+		func(node ast.Node) {
+			typeSpec := node.(*ast.TypeSpec)
+
+			// only proceed with struct types
+			structType, ok := typeSpec.Type.(*ast.StructType)
+			if !ok {
+				return
+			}
+
+			// get type name
+			typeName := typeSpec.Name.Name
+
+			var (
+				fieldNames []string               // field names
+				fieldIdx   = make(map[string]int) // index of field in StructType.Fields.List
+			)
+
+			// collect all field names
+			for i, field := range structType.Fields.List {
+				if field.Names == nil {
+					// embedded type
+					continue
+				}
+
+				fieldName := field.Names[0].Name
+				fieldNames = append(fieldNames, fieldName)
+				fieldIdx[fieldName] = i
+			}
+
+			// find fields with common prefix
+			commonPrefix, found := FindIdentsWithPartialPrefix(typeName, fieldNames)
+
+			// make issues
+			for _, fieldName := range found {
+				hash := analysis.GetHashFromString(typeName + fieldName)
+				if cfg.IsVerifyHash(hash) {
+					continue
+				}
+
+				fieldPos := pkg.Fset.Position(structType.Fields.List[fieldIdx[fieldName]].Pos())
+				pkgIssues = append(pkgIssues, analysis.Issue{
+					Message:  fmt.Sprintf("field %s has common prefix (%s) with struct name (%s)", fieldName, commonPrefix, typeName),
+					Line:     fieldPos.Line,
+					Filename: fieldPos.Filename,
+					Hash:     hash,
+				})
+			}
+		})
 
 	return pkgIssues
 }

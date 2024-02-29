@@ -3,7 +3,6 @@ package linters
 import (
 	"fmt"
 	"go/ast"
-	"unicode"
 
 	"github.com/mirecl/golimiter/internal/analysis"
 	"golang.org/x/tools/go/ast/inspector"
@@ -84,24 +83,6 @@ func runNoLength(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []ana
 		}
 	})
 	return pkgIssues
-}
-
-func GetSegmentCount(text string) int {
-	c := 0
-	isLastSymbolUpper := true
-	for i, w := range text {
-		if unicode.IsLower(w) && i == 0 {
-			c++
-			continue
-		}
-		if unicode.IsUpper(w) && (!isLastSymbolUpper || i == 0) {
-			c++
-			isLastSymbolUpper = true
-			continue
-		}
-		isLastSymbolUpper = false
-	}
-	return c
 }
 
 func GetObjectName(node ast.Node) string {
