@@ -21,6 +21,10 @@ func NewNoGeneric() *analysis.Linter {
 		Run: func(cfg *analysis.Config, pkgs []*packages.Package) []analysis.Issue {
 			issues := make([]analysis.Issue, 0)
 
+			if cfg.NoGeneric.Disable {
+				return issues
+			}
+
 			for _, pkg := range pkgs {
 				pkgIssues := runNoGeneric(&cfg.NoGeneric, pkg)
 				issues = append(issues, pkgIssues...)

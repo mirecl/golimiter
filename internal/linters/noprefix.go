@@ -28,6 +28,10 @@ func NewNoPrefix() *analysis.Linter {
 		Run: func(cfg *analysis.Config, pkgs []*packages.Package) []analysis.Issue {
 			issues := make([]analysis.Issue, 0)
 
+			if cfg.NoPrefix.Disable {
+				return issues
+			}
+
 			for _, pkg := range pkgs {
 				issues = append(issues, runNoPrefix(&cfg.NoPrefix, pkg)...)
 				issues = append(issues, runNoCommonPrefix(&cfg.NoPrefix, pkg)...)

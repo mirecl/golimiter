@@ -26,6 +26,10 @@ func NewNoLength() *analysis.Linter {
 		Run: func(cfg *analysis.Config, pkgs []*packages.Package) []analysis.Issue {
 			issues := make([]analysis.Issue, 0)
 
+			if cfg.NoLength.Disable {
+				return issues
+			}
+
 			for _, pkg := range pkgs {
 				pkgIssues := runNoLength(&cfg.NoLength, pkg)
 				issues = append(issues, pkgIssues...)

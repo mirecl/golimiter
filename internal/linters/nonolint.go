@@ -27,6 +27,10 @@ func NewNoNoLint() *analysis.Linter {
 		Run: func(cfg *analysis.Config, pkgs []*packages.Package) []analysis.Issue {
 			issues := make([]analysis.Issue, 0)
 
+			if cfg.NoNoLint.Disable {
+				return issues
+			}
+
 			for _, pkg := range pkgs {
 				issues = append(issues, runNoNoLint(&cfg.NoNoLint, pkg)...)
 			}

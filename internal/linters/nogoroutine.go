@@ -19,6 +19,10 @@ func NewNoGoroutine() *analysis.Linter {
 		Run: func(cfg *analysis.Config, pkgs []*packages.Package) []analysis.Issue {
 			issues := make([]analysis.Issue, 0)
 
+			if cfg.NoGoroutine.Disable {
+				return issues
+			}
+
 			for _, pkg := range pkgs {
 				pkgIssues := runNoGoroutine(&cfg.NoGoroutine, pkg)
 				issues = append(issues, pkgIssues...)
