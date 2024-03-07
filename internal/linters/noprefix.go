@@ -17,7 +17,8 @@ const (
 
 var PrefixAllow = []string{"get", "new", "is", "calc", "validate", "normalize",
 	"execute", "get", "set", "parse", "apply", "append", "clear", "remove",
-	"delete", "update", "to", "from", "run", "read", "collect", "add", "predict", "inference", "check"}
+	"delete", "update", "to", "from", "run", "read", "collect", "add", "predict",
+	"inference", "check", "max", "min"}
 
 // NewNoInit create instance linter for check func init.
 //
