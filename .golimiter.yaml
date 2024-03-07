@@ -1,21 +1,32 @@
 # Before format time.Time 2015-02-24T00:00:00.0Z
-github.com/mirecl/golimiter:
+# Severity: CRITICAL, MAJOR, MINOR, INFO, BLOCKER (default)
+# Disable: true, false (default)
+global:
   NoDefer:
-    ExcludeHashs:
-      - Hash: 9272e16ca4af2a3e3910d95cc9ab6411
-        Path: internal/analysis/analysis.go
-        Comment: Close file `defer file.Close()`
-      - Hash: 679a2f59cc1f54c08274187e96770ee1
-        Path: internal/linters/nonolint.go
-        Comment: Close file `defer file.Close()`
+    Severity: BLOCKER
+    Disable: true
   NoNoLint:
-    ExcludeNames:
-      - Position:
-          Name: NewNoInit
-          Path: internal/linters/noinit.go
-          Comment: New instance linter
-        Linters:
-          - dupl
-    ExcludeHashs:
-      - Hash: cb2b725e0180ff02b44f8b35a1f1c32c
-        Comment: No check error (`errcheck`) on close file `internal/linters/nonolint.go` in func `ReadLine`
+    Severity: INFO
+    Disable: true
+
+module:
+  github.com/mirecl/golimiter:
+    NoDefer:
+      ExcludeHashs:
+        - Hash: 9272e16ca4af2a3e3910d95cc9ab6411
+          Path: internal/analysis/analysis.go
+          Comment: Close file `defer file.Close()`
+        - Hash: 679a2f59cc1f54c08274187e96770ee1
+          Path: internal/linters/nonolint.go
+          Comment: Close file `defer file.Close()`
+    NoNoLint:
+      ExcludeNames:
+        - Position:
+            Name: NewNoInit
+            Path: internal/linters/noinit.go
+            Comment: New instance linter
+          Linters:
+            - dupl
+      ExcludeHashs:
+        - Hash: cb2b725e0180ff02b44f8b35a1f1c32c
+          Comment: No check error (`errcheck`) on close file `internal/linters/nonolint.go` in func `ReadLine`

@@ -17,7 +17,7 @@ const (
 
 var PrefixAllow = []string{"get", "new", "is", "calc", "validate", "normalize",
 	"execute", "get", "set", "parse", "apply", "append", "clear", "remove",
-	"delete", "update", "to", "from", "run", "read"}
+	"delete", "update", "to", "from", "run", "read", "collect", "add", "predict", "inference", "check"}
 
 // NewNoInit create instance linter for check func init.
 //
@@ -61,7 +61,7 @@ func runNoPrefix(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []ana
 
 		name := strings.ToLower(fn.Name.Name)
 
-		if name == "main" {
+		if name == "main" || name == "init" {
 			return
 		}
 
@@ -70,9 +70,6 @@ func runNoPrefix(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []ana
 				return
 			}
 		}
-
-		filename := analysis.GetPathRelative(position.Filename)
-		fmt.Println(fmt.Sprintf("%s:%d", filename, position.Line), fn.Name.Name)
 
 		hash := analysis.GetHashFromString(fn.Name.Name)
 		if cfg.IsVerifyHash(hash) {
@@ -84,6 +81,7 @@ func runNoPrefix(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []ana
 			Line:     position.Line,
 			Filename: position.Filename,
 			Hash:     hash,
+			Severity: cfg.Severity,
 		})
 	})
 
@@ -107,6 +105,9 @@ func runNoCommonPrefix(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package)
 			}
 
 			// get type name
+			if typeSpec.Name == nil {
+				return
+			}
 			typeName := typeSpec.Name.Name
 
 			var (
@@ -142,6 +143,7 @@ func runNoCommonPrefix(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package)
 					Line:     fieldPos.Line,
 					Filename: fieldPos.Filename,
 					Hash:     hash,
+					Severity: cfg.Severity,
 				})
 			}
 		})

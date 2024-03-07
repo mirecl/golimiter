@@ -19,6 +19,10 @@ func NewNoDefer() *analysis.Linter {
 		Run: func(cfg *analysis.Config, pkgs []*packages.Package) []analysis.Issue {
 			issues := make([]analysis.Issue, 0)
 
+			if cfg.NoDefer.Disable {
+				return issues
+			}
+
 			for _, pkg := range pkgs {
 				pkgIssues := runNoDefer(&cfg.NoDefer, pkg)
 				issues = append(issues, pkgIssues...)
@@ -50,6 +54,7 @@ func runNoDefer(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []anal
 			Line:     position.Line,
 			Filename: position.Filename,
 			Hash:     hash,
+			Severity: cfg.Severity,
 		})
 	})
 

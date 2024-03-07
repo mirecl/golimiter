@@ -20,14 +20,21 @@ type Config struct {
 	NoPrefix    ConfigDefaultLinter `yaml:"NoPrefix"`
 }
 
+type Info struct {
+	Severity string `yaml:"Severity"`
+	Disable  bool   `yaml:"Disable"`
+}
+
 type ConfigDefaultLinter struct {
 	ExcludeHashs []ExcludeHash `yaml:"ExcludeHashs"`
 	ExcludeNames []ExcludeName `yaml:"ExcludeNames"`
+	Info
 }
 
 type ConfigNoNoLint struct {
 	ExcludeHashs []ExcludeHash         `yaml:"ExcludeHashs"`
 	ExcludeNames []ExcludeNameNoNoLint `yaml:"ExcludeNames"`
+	Info
 }
 
 type ExcludeHash struct {
@@ -130,9 +137,14 @@ func (c ConfigNoNoLint) IsVerifyName(path, name string, linters []string) bool {
 	return false
 }
 
+type Test struct {
+	Global map[string]*Info  `yaml:"global"`
+	Module map[string]Config `yaml:"module"`
+}
+
 // Read load config file `.golimiter.yaml`.
 func ReadConfig() (*Config, error) {
-	var config map[string]Config
+	var config Test
 
 	gomod, err := ReadModFile()
 	if err != nil {
@@ -148,8 +160,27 @@ func ReadConfig() (*Config, error) {
 		return nil, err
 	}
 
-	cfg := config[gomod.Module.Mod.String()]
+	cfg := config.Module[gomod.Module.Mod.String()]
+
+	// TODO: to be use reflect
+	cfg.NoDefer.Info = GetGlobalConfigForLinter(config.Global, "NoDefer")
+	cfg.NoGeneric.Info = GetGlobalConfigForLinter(config.Global, "NoGeneric")
+	cfg.NoGoroutine.Info = GetGlobalConfigForLinter(config.Global, "NoGoroutine")
+	cfg.NoInit.Info = GetGlobalConfigForLinter(config.Global, "NoInit")
+	cfg.NoLength.Info = GetGlobalConfigForLinter(config.Global, "NoLength")
+	cfg.NoNoLint.Info = GetGlobalConfigForLinter(config.Global, "NoNoLint")
+	cfg.NoPrefix.Info = GetGlobalConfigForLinter(config.Global, "NoPrefix")
+
 	return &cfg, nil
+}
+
+func GetGlobalConfigForLinter(global map[string]*Info, name string) Info {
+	if cfg, ok := global[name]; ok {
+		if cfg != nil {
+			return *cfg
+		}
+	}
+	return Info{Severity: "BLOCKER", Disable: false}
 }
 
 // ReadModFile return info from file go.mod.

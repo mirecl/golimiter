@@ -59,6 +59,7 @@ func runNoGeneric(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []an
 			Line:     position.Line,
 			Filename: position.Filename,
 			Hash:     hash,
+			Severity: cfg.Severity,
 		})
 	})
 
