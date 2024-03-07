@@ -23,6 +23,7 @@ type Config struct {
 type Info struct {
 	Severity string `yaml:"Severity"`
 	Disable  bool   `yaml:"Disable"`
+	Type     string `yaml:"Type"`
 }
 
 type ConfigDefaultLinter struct {
@@ -180,7 +181,7 @@ func GetGlobalConfigForLinter(global map[string]*Info, name string) Info {
 			return *cfg
 		}
 	}
-	return Info{Severity: "BLOCKER", Disable: false}
+	return Info{Severity: "BLOCKER", Disable: false, Type: "BUG"}
 }
 
 // ReadModFile return info from file go.mod.

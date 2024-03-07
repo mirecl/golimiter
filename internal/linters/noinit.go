@@ -58,6 +58,7 @@ func runNoInit(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []analy
 			Filename: position.Filename,
 			Hash:     hash,
 			Severity: cfg.Severity,
+			Type:     cfg.Type,
 		})
 	})
 

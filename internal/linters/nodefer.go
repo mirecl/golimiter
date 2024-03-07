@@ -55,6 +55,7 @@ func runNoDefer(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []anal
 			Filename: position.Filename,
 			Hash:     hash,
 			Severity: cfg.Severity,
+			Type:     cfg.Type,
 		})
 	})
 

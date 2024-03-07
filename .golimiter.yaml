@@ -1,5 +1,6 @@
 # Before format time.Time 2015-02-24T00:00:00.0Z
 # Severity: CRITICAL, MAJOR, MINOR, INFO, BLOCKER (default)
+# Type: VULNERABILITY, CODE_SMELL, BUG (default)
 # Disable: true, false (default)
 global:
   NoDefer:
@@ -8,6 +9,7 @@ global:
   NoNoLint:
     Severity: INFO
     Disable: true
+    Type: CODE_SMELL
 
 module:
   github.com/mirecl/golimiter:

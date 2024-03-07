@@ -60,6 +60,7 @@ func runNoGeneric(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []an
 			Filename: position.Filename,
 			Hash:     hash,
 			Severity: cfg.Severity,
+			Type:     cfg.Type,
 		})
 	})
 

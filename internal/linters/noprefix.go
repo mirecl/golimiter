@@ -55,6 +55,8 @@ func runNoPrefix(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []ana
 				Line:     position.Line,
 				Filename: position.Filename,
 				Hash:     "",
+				Severity: cfg.Severity,
+				Type:     cfg.Type,
 			})
 			return
 		}
@@ -82,6 +84,7 @@ func runNoPrefix(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []ana
 			Filename: position.Filename,
 			Hash:     hash,
 			Severity: cfg.Severity,
+			Type:     cfg.Type,
 		})
 	})
 
@@ -144,6 +147,7 @@ func runNoCommonPrefix(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package)
 					Filename: fieldPos.Filename,
 					Hash:     hash,
 					Severity: cfg.Severity,
+					Type:     cfg.Type,
 				})
 			}
 		})

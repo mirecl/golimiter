@@ -87,6 +87,7 @@ func runNoNoLint(cfg *analysis.ConfigNoNoLint, pkg *packages.Package) []analysis
 				Filename: comment.Filename,
 				Hash:     hash,
 				Severity: cfg.Severity,
+				Type:     cfg.Type,
 			})
 		}
 	})

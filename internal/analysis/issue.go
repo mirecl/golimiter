@@ -7,4 +7,5 @@ type Issue struct {
 	Line     int    `json:"line"`
 	Hash     string `json:"hash"`
 	Severity string `json:"severity"`
+	Type     string `json:"type"`
 }

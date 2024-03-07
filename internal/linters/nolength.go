@@ -68,6 +68,7 @@ func runNoLength(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []ana
 				Filename: position.Filename,
 				Hash:     hash,
 				Severity: cfg.Severity,
+				Type:     cfg.Type,
 			})
 		}
 
@@ -81,6 +82,7 @@ func runNoLength(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []ana
 				Filename: position.Filename,
 				Hash:     analysis.GetHashFromString(name),
 				Severity: cfg.Severity,
+				Type:     cfg.Type,
 			})
 		}
 	})
