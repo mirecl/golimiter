@@ -10,7 +10,7 @@ import (
 )
 
 // Version golimiter linter.
-const Version string = "0.3.4"
+const Version string = "0.3.10"
 
 func main() {
 	jsonFlag := flag.Bool("json", false, "format report")

@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/mirecl/golimiter/internal/analysis"
@@ -57,6 +58,13 @@ func runNoNoLint(cfg *analysis.ConfigNoNoLint, pkg *packages.Package) []analysis
 
 	inspect.Preorder(nodeFilter, func(node ast.Node) {
 		var hash string
+
+		position := pkg.Fset.Position(node.Pos())
+
+		currentFile := analysis.GetPathRelative(position.Filename)
+		if slices.Contains(cfg.ExcludeFiles, currentFile) {
+			return
+		}
 
 		nFuncDecl, _ := node.(*ast.FuncDecl)
 

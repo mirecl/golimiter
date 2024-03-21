@@ -3,6 +3,7 @@ package analysis
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"time"
 
@@ -29,12 +30,14 @@ type Info struct {
 type ConfigDefaultLinter struct {
 	ExcludeHashs []ExcludeHash `yaml:"ExcludeHashs"`
 	ExcludeNames []ExcludeName `yaml:"ExcludeNames"`
-	Info
+	ExcludeFiles []string      `yaml:"ExcludeFiles"`
+	Info         `yaml:"Info"`
 }
 
 type ConfigNoNoLint struct {
 	ExcludeHashs []ExcludeHash         `yaml:"ExcludeHashs"`
 	ExcludeNames []ExcludeNameNoNoLint `yaml:"ExcludeNames"`
+	ExcludeFiles []string              `yaml:"ExcludeFiles"`
 	Info
 }
 
@@ -138,14 +141,19 @@ func (c ConfigNoNoLint) IsVerifyName(path, name string, linters []string) bool {
 	return false
 }
 
-type Test struct {
-	Global map[string]*Info  `yaml:"global"`
+type Global struct {
+	ExcludeFiles []string         `yaml:"ExcludeFiles"`
+	Linters      map[string]*Info `yaml:"Linters"`
+}
+
+type Settings struct {
+	Global Global            `yaml:"global"`
 	Module map[string]Config `yaml:"module"`
 }
 
 // Read load config file `.golimiter.yaml`.
 func ReadConfig() (*Config, error) {
-	var config Test
+	var settings Settings
 
 	gomod, err := ReadModFile()
 	if err != nil {
@@ -157,20 +165,47 @@ func ReadConfig() (*Config, error) {
 		return &Config{}, nil
 	}
 
-	if err := yaml.Unmarshal(body, &config); err != nil {
+	if err := yaml.Unmarshal(body, &settings); err != nil {
 		return nil, err
 	}
 
-	cfg := config.Module[gomod.Module.Mod.String()]
+	cfg := settings.Module[gomod.Module.Mod.String()]
 
-	// TODO: to be use reflect
-	cfg.NoDefer.Info = GetGlobalConfigForLinter(config.Global, "NoDefer")
-	cfg.NoGeneric.Info = GetGlobalConfigForLinter(config.Global, "NoGeneric")
-	cfg.NoGoroutine.Info = GetGlobalConfigForLinter(config.Global, "NoGoroutine")
-	cfg.NoInit.Info = GetGlobalConfigForLinter(config.Global, "NoInit")
-	cfg.NoLength.Info = GetGlobalConfigForLinter(config.Global, "NoLength")
-	cfg.NoNoLint.Info = GetGlobalConfigForLinter(config.Global, "NoNoLint")
-	cfg.NoPrefix.Info = GetGlobalConfigForLinter(config.Global, "NoPrefix")
+	// TODO: to be use reflect - mapping config to module
+	if reflect.ValueOf(cfg.NoDefer.Info).IsZero() {
+		cfg.NoDefer.Info = GetGlobalConfigForLinter(settings.Global.Linters, "NoDefer")
+	}
+	cfg.NoDefer.ExcludeFiles = append(cfg.NoDefer.ExcludeFiles, settings.Global.ExcludeFiles...)
+
+	if reflect.ValueOf(cfg.NoGeneric.Info).IsZero() {
+		cfg.NoGeneric.Info = GetGlobalConfigForLinter(settings.Global.Linters, "NoGeneric")
+	}
+	cfg.NoGeneric.ExcludeFiles = append(cfg.NoGeneric.ExcludeFiles, settings.Global.ExcludeFiles...)
+
+	if reflect.ValueOf(cfg.NoGoroutine.Info).IsZero() {
+		cfg.NoGoroutine.Info = GetGlobalConfigForLinter(settings.Global.Linters, "NoGoroutine")
+	}
+	cfg.NoGoroutine.ExcludeFiles = append(cfg.NoGoroutine.ExcludeFiles, settings.Global.ExcludeFiles...)
+
+	if reflect.ValueOf(cfg.NoInit.Info).IsZero() {
+		cfg.NoInit.Info = GetGlobalConfigForLinter(settings.Global.Linters, "NoInit")
+	}
+	cfg.NoInit.ExcludeFiles = append(cfg.NoInit.ExcludeFiles, settings.Global.ExcludeFiles...)
+
+	if reflect.ValueOf(cfg.NoLength.Info).IsZero() {
+		cfg.NoLength.Info = GetGlobalConfigForLinter(settings.Global.Linters, "NoLength")
+	}
+	cfg.NoLength.ExcludeFiles = append(cfg.NoLength.ExcludeFiles, settings.Global.ExcludeFiles...)
+
+	if reflect.ValueOf(cfg.NoNoLint.Info).IsZero() {
+		cfg.NoNoLint.Info = GetGlobalConfigForLinter(settings.Global.Linters, "NoNoLint")
+	}
+	cfg.NoNoLint.ExcludeFiles = append(cfg.NoNoLint.ExcludeFiles, settings.Global.ExcludeFiles...)
+
+	if reflect.ValueOf(cfg.NoPrefix.Info).IsZero() {
+		cfg.NoPrefix.Info = GetGlobalConfigForLinter(settings.Global.Linters, "NoPrefix")
+	}
+	cfg.NoPrefix.ExcludeFiles = append(cfg.NoPrefix.ExcludeFiles, settings.Global.ExcludeFiles...)
 
 	return &cfg, nil
 }

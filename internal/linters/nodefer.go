@@ -2,6 +2,7 @@ package linters
 
 import (
 	"go/ast"
+	"slices"
 
 	"github.com/mirecl/golimiter/internal/analysis"
 	"golang.org/x/tools/go/ast/inspector"
@@ -42,12 +43,17 @@ func runNoDefer(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []anal
 	var pkgIssues []analysis.Issue
 
 	inspect.Preorder(nodeFilter, func(node ast.Node) {
+		position := pkg.Fset.Position(node.Pos())
+
+		currentFile := analysis.GetPathRelative(position.Filename)
+		if slices.Contains(cfg.ExcludeFiles, currentFile) {
+			return
+		}
+
 		hash := analysis.GetHashFromBody(pkg.Fset, node)
 		if cfg.IsVerifyHash(hash) {
 			return
 		}
-
-		position := pkg.Fset.Position(node.Pos())
 
 		pkgIssues = append(pkgIssues, analysis.Issue{
 			Message:  messageNoDefer,

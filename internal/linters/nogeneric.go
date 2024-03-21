@@ -3,6 +3,7 @@ package linters
 import (
 	"go/ast"
 	"go/types"
+	"slices"
 
 	"github.com/mirecl/golimiter/internal/analysis"
 	"golang.org/x/tools/go/ast/inspector"
@@ -47,6 +48,13 @@ func runNoGeneric(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []an
 	var pkgIssues []analysis.Issue
 
 	inspect.Preorder(nodeFilter, func(node ast.Node) {
+		position := pkg.Fset.Position(node.Pos())
+
+		currentFile := analysis.GetPathRelative(position.Filename)
+		if slices.Contains(cfg.ExcludeFiles, currentFile) {
+			return
+		}
+
 		if !IsGeneric(node, pkg.TypesInfo) {
 			return
 		}
@@ -55,8 +63,6 @@ func runNoGeneric(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []an
 		if cfg.IsVerifyHash(hash) {
 			return
 		}
-
-		position := pkg.Fset.Position(node.Pos())
 
 		pkgIssues = append(pkgIssues, analysis.Issue{
 			Message:  messageNoGeneric,

@@ -3,6 +3,7 @@ package linters
 import (
 	"fmt"
 	"go/ast"
+	"slices"
 
 	"github.com/mirecl/golimiter/internal/analysis"
 	"golang.org/x/tools/go/ast/inspector"
@@ -53,6 +54,13 @@ func runNoLength(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []ana
 	var pkgIssues []analysis.Issue
 
 	inspect.Preorder(nodeFilter, func(node ast.Node) {
+		position := pkg.Fset.Position(node.Pos())
+
+		currentFile := analysis.GetPathRelative(position.Filename)
+		if slices.Contains(cfg.ExcludeFiles, currentFile) {
+			return
+		}
+
 		name := GetObjectName(node)
 		if name == "" {
 			return
@@ -64,8 +72,6 @@ func runNoLength(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []ana
 		}
 
 		if len(name) > MaxLengthObject {
-			position := pkg.Fset.Position(node.Pos())
-
 			pkgIssues = append(pkgIssues, analysis.Issue{
 				Message:  fmt.Sprintf("%s %d (now %d)", messageNoLengthLength, MaxLengthObject, len(name)),
 				Line:     position.Line,
@@ -78,8 +84,6 @@ func runNoLength(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []ana
 
 		segment := GetSegmentCount(name)
 		if segment > MaxSegmentCount {
-			position := pkg.Fset.Position(node.Pos())
-
 			pkgIssues = append(pkgIssues, analysis.Issue{
 				Message:  fmt.Sprintf("%s %d (now %d)", messageNoLengthSegment, MaxSegmentCount, segment),
 				Line:     position.Line,

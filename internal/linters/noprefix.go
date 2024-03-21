@@ -3,6 +3,7 @@ package linters
 import (
 	"fmt"
 	"go/ast"
+	"slices"
 	"strings"
 
 	"github.com/mirecl/golimiter/internal/analysis"
@@ -18,7 +19,7 @@ const (
 var PrefixAllow = []string{"get", "new", "is", "calc", "validate", "normalize",
 	"execute", "get", "set", "parse", "apply", "append", "clear", "remove",
 	"delete", "update", "to", "from", "run", "read", "collect", "add", "predict",
-	"inference", "check", "max", "min"}
+	"inference", "check", "max", "min", "find"}
 
 // NewNoInit create instance linter for check func init.
 //
@@ -53,6 +54,11 @@ func runNoPrefix(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []ana
 	inspect.Preorder(nodeFilter, func(node ast.Node) {
 		fn, _ := node.(*ast.FuncDecl)
 		position := pkg.Fset.Position(node.Pos())
+
+		currentFile := analysis.GetPathRelative(position.Filename)
+		if slices.Contains(cfg.ExcludeFiles, currentFile) {
+			return
+		}
 
 		if fn.Name == nil {
 			pkgIssues = append(pkgIssues, analysis.Issue{
@@ -102,60 +108,67 @@ func runNoCommonPrefix(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package)
 
 	nodeFilter := []ast.Node{(*ast.TypeSpec)(nil)}
 
-	inspect.Preorder(nodeFilter,
-		func(node ast.Node) {
-			typeSpec := node.(*ast.TypeSpec)
+	inspect.Preorder(nodeFilter, func(node ast.Node) {
+		position := pkg.Fset.Position(node.Pos())
 
-			// only proceed with struct types
-			structType, ok := typeSpec.Type.(*ast.StructType)
-			if !ok {
-				return
+		currentFile := analysis.GetPathRelative(position.Filename)
+		if slices.Contains(cfg.ExcludeFiles, currentFile) {
+			return
+		}
+
+		typeSpec := node.(*ast.TypeSpec)
+
+		// only proceed with struct types
+		structType, ok := typeSpec.Type.(*ast.StructType)
+		if !ok {
+			return
+		}
+
+		// get type name
+		if typeSpec.Name == nil {
+			return
+		}
+		typeName := typeSpec.Name.Name
+
+		var (
+			fieldNames []string               // field names
+			fieldIdx   = make(map[string]int) // index of field in StructType.Fields.List
+		)
+
+		// collect all field names
+		for i, field := range structType.Fields.List {
+			if field.Names == nil {
+				// embedded type
+				continue
 			}
 
-			// get type name
-			if typeSpec.Name == nil {
-				return
-			}
-			typeName := typeSpec.Name.Name
+			fieldName := field.Names[0].Name
+			fieldNames = append(fieldNames, fieldName)
+			fieldIdx[fieldName] = i
+		}
 
-			var (
-				fieldNames []string               // field names
-				fieldIdx   = make(map[string]int) // index of field in StructType.Fields.List
-			)
+		// find fields with common prefix
+		commonPrefix, found := FindIdentsWithPartialPrefix(typeName, fieldNames)
 
-			// collect all field names
-			for i, field := range structType.Fields.List {
-				if field.Names == nil {
-					// embedded type
-					continue
-				}
-
-				fieldName := field.Names[0].Name
-				fieldNames = append(fieldNames, fieldName)
-				fieldIdx[fieldName] = i
+		// make issues
+		for _, fieldName := range found {
+			hash := analysis.GetHashFromString(typeName + fieldName)
+			if cfg.IsVerifyHash(hash) {
+				continue
 			}
 
-			// find fields with common prefix
-			commonPrefix, found := FindIdentsWithPartialPrefix(typeName, fieldNames)
+			fieldPos := pkg.Fset.Position(structType.Fields.List[fieldIdx[fieldName]].Pos())
 
-			// make issues
-			for _, fieldName := range found {
-				hash := analysis.GetHashFromString(typeName + fieldName)
-				if cfg.IsVerifyHash(hash) {
-					continue
-				}
-
-				fieldPos := pkg.Fset.Position(structType.Fields.List[fieldIdx[fieldName]].Pos())
-				pkgIssues = append(pkgIssues, analysis.Issue{
-					Message:  fmt.Sprintf("field %s has common prefix (%s) with struct name (%s)", fieldName, commonPrefix, typeName),
-					Line:     fieldPos.Line,
-					Filename: fieldPos.Filename,
-					Hash:     hash,
-					Severity: cfg.Severity,
-					Type:     cfg.Type,
-				})
-			}
-		})
+			pkgIssues = append(pkgIssues, analysis.Issue{
+				Message:  fmt.Sprintf("field %s has common prefix (%s) with struct name (%s)", fieldName, commonPrefix, typeName),
+				Line:     fieldPos.Line,
+				Filename: fieldPos.Filename,
+				Hash:     hash,
+				Severity: cfg.Severity,
+				Type:     cfg.Type,
+			})
+		}
+	})
 
 	return pkgIssues
 }

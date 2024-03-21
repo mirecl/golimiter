@@ -3,13 +3,16 @@
 # Type: VULNERABILITY, CODE_SMELL, BUG (default)
 # Disable: true, false (default)
 global:
-  NoDefer:
-    Severity: BLOCKER
-    Disable: true
-  NoNoLint:
-    Severity: INFO
-    Disable: true
-    Type: CODE_SMELL
+  ExcludeFiles:
+    - internal/linters/nogeneric.go
+  Linters:
+    NoDefer:
+      Severity: BLOCKER
+      Disable: true
+    NoNoLint:
+      Severity: INFO
+      Disable: true
+      Type: CODE_SMELL
 
 module:
   github.com/mirecl/golimiter:

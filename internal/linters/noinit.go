@@ -2,6 +2,7 @@ package linters
 
 import (
 	"go/ast"
+	"slices"
 
 	"github.com/mirecl/golimiter/internal/analysis"
 	"golang.org/x/tools/go/ast/inspector"
@@ -43,6 +44,13 @@ func runNoInit(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []analy
 	var pkgIssues []analysis.Issue
 
 	inspect.Preorder(nodeFilter, func(node ast.Node) {
+		position := pkg.Fset.Position(node.Pos())
+
+		currentFile := analysis.GetPathRelative(position.Filename)
+		if slices.Contains(cfg.ExcludeFiles, currentFile) {
+			return
+		}
+
 		fn, _ := node.(*ast.FuncDecl)
 
 		if fn.Name != nil && fn.Name.String() != "init" {
@@ -53,8 +61,6 @@ func runNoInit(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []analy
 		if cfg.IsVerifyHash(hash) {
 			return
 		}
-
-		position := pkg.Fset.Position(node.Pos())
 
 		pkgIssues = append(pkgIssues, analysis.Issue{
 			Message:  messageNoInit,
