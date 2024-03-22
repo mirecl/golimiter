@@ -1,6 +1,7 @@
 package analysis
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -38,7 +39,7 @@ type ConfigNoNoLint struct {
 	ExcludeHashs []ExcludeHash         `yaml:"ExcludeHashs"`
 	ExcludeNames []ExcludeNameNoNoLint `yaml:"ExcludeNames"`
 	ExcludeFiles []string              `yaml:"ExcludeFiles"`
-	Info
+	Info         `yaml:"Info"`
 }
 
 type ExcludeHash struct {
@@ -151,21 +152,29 @@ type Settings struct {
 	Module map[string]Config `yaml:"module"`
 }
 
-// Read load config file `.golimiter.yaml`.
-func ReadConfig() (*Config, error) {
+// ReadConfig load config file `.golimiter.yaml` or stdin.
+func ReadConfig(path string) (*Config, error) {
 	var settings Settings
+	var body []byte
 
 	gomod, err := ReadModFile()
 	if err != nil {
 		return nil, err
 	}
 
-	body, err := os.ReadFile(".golimiter.yaml")
-	if err != nil {
-		return &Config{}, nil
+	if path == os.Stdin.Name() {
+		body, err = io.ReadAll(os.Stdin)
+		if err != nil {
+			return &Config{}, nil
+		}
+	} else {
+		body, err = os.ReadFile(filepath.Clean(path))
+		if err != nil {
+			return &Config{}, nil
+		}
 	}
 
-	if err := yaml.Unmarshal(body, &settings); err != nil {
+	if err = yaml.Unmarshal(body, &settings); err != nil {
 		return nil, err
 	}
 

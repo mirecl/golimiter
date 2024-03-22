@@ -10,11 +10,12 @@ import (
 )
 
 // Version golimiter linter.
-const Version string = "0.3.10"
+const Version string = "0.3.11"
 
 func main() {
 	jsonFlag := flag.Bool("json", false, "format report")
 	versionFlag := flag.Bool("version", false, "version golimiter")
+	configFlag := flag.String("config", ".golimiter.yaml", "path config file")
 
 	flag.Parse()
 
@@ -23,7 +24,7 @@ func main() {
 		return
 	}
 
-	cfg, err := analysis.ReadConfig()
+	cfg, err := analysis.ReadConfig(*configFlag)
 	if err != nil {
 		panic(err)
 	}
