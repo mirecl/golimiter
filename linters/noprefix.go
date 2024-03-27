@@ -69,6 +69,7 @@ func runNoPrefix(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Is
 				Hash:     "",
 				Severity: cfg.Severity,
 				Type:     cfg.Type,
+				Rule:     "noprefix",
 			})
 			return
 		}
@@ -97,6 +98,7 @@ func runNoPrefix(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Is
 			Hash:     hash,
 			Severity: cfg.Severity,
 			Type:     cfg.Type,
+			Rule:     "noprefix",
 		})
 	})
 
@@ -167,6 +169,7 @@ func runNoCommonPrefix(cfg *config.DefaultLinter, pkg *packages.Package) (pkgIss
 				Hash:     hash,
 				Severity: cfg.Severity,
 				Type:     cfg.Type,
+				Rule:     "noprefix",
 			})
 		}
 	})

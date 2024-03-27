@@ -63,6 +63,7 @@ func runNoDefer(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Iss
 			Hash:     hash,
 			Severity: cfg.Severity,
 			Type:     cfg.Type,
+			Rule:     "nodefer",
 		})
 	})
 

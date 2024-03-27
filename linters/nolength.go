@@ -80,6 +80,7 @@ func runNoLength(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Is
 				Hash:     hash,
 				Severity: cfg.Severity,
 				Type:     cfg.Type,
+				Rule:     "nolength",
 			})
 		}
 

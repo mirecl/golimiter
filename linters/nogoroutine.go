@@ -63,6 +63,7 @@ func runNoGoroutine(cfg *config.DefaultLinter, pkg *packages.Package) []analysis
 			Hash:     hash,
 			Severity: cfg.Severity,
 			Type:     cfg.Type,
+			Rule:     "nogoroutine",
 		})
 	})
 
