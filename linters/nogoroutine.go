@@ -4,31 +4,29 @@ import (
 	"go/ast"
 	"slices"
 
+	"github.com/mirecl/golimiter/analysis"
 	"github.com/mirecl/golimiter/config"
-	"github.com/mirecl/golimiter/internal/analysis"
 	"golang.org/x/tools/go/ast/inspector"
 	"golang.org/x/tools/go/packages"
 )
 
 const (
-	messageNoInit = "a `init` funcs forbidden to use"
+	messageNoGoroutine = "a `goroutine` statement forbidden to use"
 )
 
-// NewNoInit create instance linter for check func init.
-//
-//nolint:dupl
-func NewNoInit() *analysis.Linter {
+// NewNoGoroutine create instance linter for check goroutines.
+func NewNoGoroutine() *analysis.Linter {
 	return &analysis.Linter{
-		Name: "NoInit",
+		Name: "NoGoroutine",
 		Run: func(cfg *config.Config, pkgs []*packages.Package) []analysis.Issue {
 			issues := make([]analysis.Issue, 0)
 
-			if cfg.NoInit.Disable {
+			if cfg.NoGoroutine.Disable {
 				return issues
 			}
 
 			for _, pkg := range pkgs {
-				pkgIssues := runNoInit(&cfg.NoInit, pkg)
+				pkgIssues := runNoGoroutine(&cfg.NoGoroutine, pkg)
 				issues = append(issues, pkgIssues...)
 			}
 
@@ -37,8 +35,9 @@ func NewNoInit() *analysis.Linter {
 	}
 }
 
-func runNoInit(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Issue {
-	nodeFilter := []ast.Node{(*ast.FuncDecl)(nil)}
+// TODO: check goroutine in func with name.
+func runNoGoroutine(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Issue {
+	nodeFilter := []ast.Node{(*ast.GoStmt)(nil)}
 
 	inspect := inspector.New(pkg.Syntax)
 
@@ -52,19 +51,13 @@ func runNoInit(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Issu
 			return
 		}
 
-		fn, _ := node.(*ast.FuncDecl)
-
-		if fn.Name != nil && fn.Name.String() != "init" {
-			return
-		}
-
 		hash := analysis.GetHashFromBody(pkg.Fset, node)
 		if cfg.IsVerifyHash(hash) {
 			return
 		}
 
 		pkgIssues = append(pkgIssues, analysis.Issue{
-			Message:  messageNoInit,
+			Message:  messageNoGoroutine,
 			Line:     position.Line,
 			Filename: position.Filename,
 			Hash:     hash,
@@ -72,10 +65,6 @@ func runNoInit(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Issu
 			Type:     cfg.Type,
 		})
 	})
-
-	if len(pkgIssues) == 1 {
-		return []analysis.Issue{}
-	}
 
 	return pkgIssues
 }

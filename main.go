@@ -5,9 +5,9 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/mirecl/golimiter/analysis"
 	"github.com/mirecl/golimiter/config"
-	"github.com/mirecl/golimiter/internal/analysis"
-	"github.com/mirecl/golimiter/internal/linters"
+	"github.com/mirecl/golimiter/linters"
 )
 
 // Version golimiter linter.

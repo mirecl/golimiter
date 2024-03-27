@@ -4,29 +4,29 @@ import (
 	"go/ast"
 	"slices"
 
+	"github.com/mirecl/golimiter/analysis"
 	"github.com/mirecl/golimiter/config"
-	"github.com/mirecl/golimiter/internal/analysis"
 	"golang.org/x/tools/go/ast/inspector"
 	"golang.org/x/tools/go/packages"
 )
 
 const (
-	messageNoGoroutine = "a `goroutine` statement forbidden to use"
+	messageNoDefer = "a `defer` statement forbidden to use"
 )
 
-// NewNoGoroutine create instance linter for check goroutines.
-func NewNoGoroutine() *analysis.Linter {
+// NewNoDefer create instance linter for check defer.
+func NewNoDefer() *analysis.Linter {
 	return &analysis.Linter{
-		Name: "NoGoroutine",
+		Name: "NoDefer",
 		Run: func(cfg *config.Config, pkgs []*packages.Package) []analysis.Issue {
 			issues := make([]analysis.Issue, 0)
 
-			if cfg.NoGoroutine.Disable {
+			if cfg.NoDefer.Disable {
 				return issues
 			}
 
 			for _, pkg := range pkgs {
-				pkgIssues := runNoGoroutine(&cfg.NoGoroutine, pkg)
+				pkgIssues := runNoDefer(&cfg.NoDefer, pkg)
 				issues = append(issues, pkgIssues...)
 			}
 
@@ -35,9 +35,9 @@ func NewNoGoroutine() *analysis.Linter {
 	}
 }
 
-// TODO: check goroutine in func with name.
-func runNoGoroutine(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Issue {
-	nodeFilter := []ast.Node{(*ast.GoStmt)(nil)}
+// TODO: check defer in func with name.
+func runNoDefer(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Issue {
+	nodeFilter := []ast.Node{(*ast.DeferStmt)(nil)}
 
 	inspect := inspector.New(pkg.Syntax)
 
@@ -57,7 +57,7 @@ func runNoGoroutine(cfg *config.DefaultLinter, pkg *packages.Package) []analysis
 		}
 
 		pkgIssues = append(pkgIssues, analysis.Issue{
-			Message:  messageNoGoroutine,
+			Message:  messageNoDefer,
 			Line:     position.Line,
 			Filename: position.Filename,
 			Hash:     hash,

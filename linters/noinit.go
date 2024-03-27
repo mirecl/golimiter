@@ -4,29 +4,31 @@ import (
 	"go/ast"
 	"slices"
 
+	"github.com/mirecl/golimiter/analysis"
 	"github.com/mirecl/golimiter/config"
-	"github.com/mirecl/golimiter/internal/analysis"
 	"golang.org/x/tools/go/ast/inspector"
 	"golang.org/x/tools/go/packages"
 )
 
 const (
-	messageNoDefer = "a `defer` statement forbidden to use"
+	messageNoInit = "a `init` funcs forbidden to use"
 )
 
-// NewNoDefer create instance linter for check defer.
-func NewNoDefer() *analysis.Linter {
+// NewNoInit create instance linter for check func init.
+//
+//nolint:dupl
+func NewNoInit() *analysis.Linter {
 	return &analysis.Linter{
-		Name: "NoDefer",
+		Name: "NoInit",
 		Run: func(cfg *config.Config, pkgs []*packages.Package) []analysis.Issue {
 			issues := make([]analysis.Issue, 0)
 
-			if cfg.NoDefer.Disable {
+			if cfg.NoInit.Disable {
 				return issues
 			}
 
 			for _, pkg := range pkgs {
-				pkgIssues := runNoDefer(&cfg.NoDefer, pkg)
+				pkgIssues := runNoInit(&cfg.NoInit, pkg)
 				issues = append(issues, pkgIssues...)
 			}
 
@@ -35,9 +37,8 @@ func NewNoDefer() *analysis.Linter {
 	}
 }
 
-// TODO: check defer in func with name.
-func runNoDefer(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Issue {
-	nodeFilter := []ast.Node{(*ast.DeferStmt)(nil)}
+func runNoInit(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Issue {
+	nodeFilter := []ast.Node{(*ast.FuncDecl)(nil)}
 
 	inspect := inspector.New(pkg.Syntax)
 
@@ -51,13 +52,19 @@ func runNoDefer(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Iss
 			return
 		}
 
+		fn, _ := node.(*ast.FuncDecl)
+
+		if fn.Name != nil && fn.Name.String() != "init" {
+			return
+		}
+
 		hash := analysis.GetHashFromBody(pkg.Fset, node)
 		if cfg.IsVerifyHash(hash) {
 			return
 		}
 
 		pkgIssues = append(pkgIssues, analysis.Issue{
-			Message:  messageNoDefer,
+			Message:  messageNoInit,
 			Line:     position.Line,
 			Filename: position.Filename,
 			Hash:     hash,
@@ -65,6 +72,10 @@ func runNoDefer(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Iss
 			Type:     cfg.Type,
 		})
 	})
+
+	if len(pkgIssues) == 1 {
+		return []analysis.Issue{}
+	}
 
 	return pkgIssues
 }

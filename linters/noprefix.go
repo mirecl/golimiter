@@ -6,8 +6,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/mirecl/golimiter/analysis"
 	"github.com/mirecl/golimiter/config"
-	"github.com/mirecl/golimiter/internal/analysis"
 	"golang.org/x/tools/go/ast/inspector"
 	"golang.org/x/tools/go/packages"
 )
