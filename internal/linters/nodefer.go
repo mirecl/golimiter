@@ -4,6 +4,7 @@ import (
 	"go/ast"
 	"slices"
 
+	"github.com/mirecl/golimiter/config"
 	"github.com/mirecl/golimiter/internal/analysis"
 	"golang.org/x/tools/go/ast/inspector"
 	"golang.org/x/tools/go/packages"
@@ -17,7 +18,7 @@ const (
 func NewNoDefer() *analysis.Linter {
 	return &analysis.Linter{
 		Name: "NoDefer",
-		Run: func(cfg *analysis.Config, pkgs []*packages.Package) []analysis.Issue {
+		Run: func(cfg *config.Config, pkgs []*packages.Package) []analysis.Issue {
 			issues := make([]analysis.Issue, 0)
 
 			if cfg.NoDefer.Disable {
@@ -35,7 +36,7 @@ func NewNoDefer() *analysis.Linter {
 }
 
 // TODO: check defer in func with name.
-func runNoDefer(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []analysis.Issue {
+func runNoDefer(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Issue {
 	nodeFilter := []ast.Node{(*ast.DeferStmt)(nil)}
 
 	inspect := inspector.New(pkg.Syntax)

@@ -5,12 +5,13 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/mirecl/golimiter/config"
 	"github.com/mirecl/golimiter/internal/analysis"
 	"github.com/mirecl/golimiter/internal/linters"
 )
 
 // Version golimiter linter.
-const Version string = "0.3.11"
+const Version string = "0.3.12"
 
 func main() {
 	jsonFlag := flag.Bool("json", false, "format report")
@@ -24,7 +25,7 @@ func main() {
 		return
 	}
 
-	cfg, err := analysis.ReadConfig(*configFlag)
+	cfg, err := config.ReadFromFile(*configFlag)
 	if err != nil {
 		panic(err)
 	}

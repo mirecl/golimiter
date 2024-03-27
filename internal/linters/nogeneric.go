@@ -5,6 +5,7 @@ import (
 	"go/types"
 	"slices"
 
+	"github.com/mirecl/golimiter/config"
 	"github.com/mirecl/golimiter/internal/analysis"
 	"golang.org/x/tools/go/ast/inspector"
 	"golang.org/x/tools/go/packages"
@@ -19,7 +20,7 @@ const (
 func NewNoGeneric() *analysis.Linter {
 	return &analysis.Linter{
 		Name: "NoGeneric",
-		Run: func(cfg *analysis.Config, pkgs []*packages.Package) []analysis.Issue {
+		Run: func(cfg *config.Config, pkgs []*packages.Package) []analysis.Issue {
 			issues := make([]analysis.Issue, 0)
 
 			if cfg.NoGeneric.Disable {
@@ -36,7 +37,7 @@ func NewNoGeneric() *analysis.Linter {
 	}
 }
 
-func runNoGeneric(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []analysis.Issue {
+func runNoGeneric(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Issue {
 	nodeFilter := []ast.Node{
 		(*ast.FuncType)(nil),
 		(*ast.InterfaceType)(nil),

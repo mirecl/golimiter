@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/mirecl/golimiter/config"
 	"github.com/mirecl/golimiter/internal/analysis"
 	"golang.org/x/tools/go/ast/inspector"
 	"golang.org/x/tools/go/packages"
@@ -25,7 +26,7 @@ var noLintRe = regexp.MustCompile(`nolint:(.*?)(\s|$)`)
 func NewNoNoLint() *analysis.Linter {
 	return &analysis.Linter{
 		Name: "NoNoLint",
-		Run: func(cfg *analysis.Config, pkgs []*packages.Package) []analysis.Issue {
+		Run: func(cfg *config.Config, pkgs []*packages.Package) []analysis.Issue {
 			issues := make([]analysis.Issue, 0)
 
 			if cfg.NoNoLint.Disable {
@@ -42,7 +43,7 @@ func NewNoNoLint() *analysis.Linter {
 }
 
 // TODO: check nolint in struct.
-func runNoNoLint(cfg *analysis.ConfigNoNoLint, pkg *packages.Package) []analysis.Issue {
+func runNoNoLint(cfg *config.NoNoLint, pkg *packages.Package) []analysis.Issue {
 	comments := make(map[string][]*ast.CommentGroup, len(pkg.Syntax))
 	for _, file := range pkg.Syntax {
 		comments[pkg.Fset.Position(file.Pos()).Filename] = file.Comments

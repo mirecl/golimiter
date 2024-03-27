@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"slices"
 
+	"github.com/mirecl/golimiter/config"
 	"github.com/mirecl/golimiter/internal/analysis"
 	"golang.org/x/tools/go/ast/inspector"
 	"golang.org/x/tools/go/packages"
@@ -24,7 +25,7 @@ const (
 func NewNoLength() *analysis.Linter {
 	return &analysis.Linter{
 		Name: "NoLength",
-		Run: func(cfg *analysis.Config, pkgs []*packages.Package) []analysis.Issue {
+		Run: func(cfg *config.Config, pkgs []*packages.Package) []analysis.Issue {
 			issues := make([]analysis.Issue, 0)
 
 			if cfg.NoLength.Disable {
@@ -42,7 +43,7 @@ func NewNoLength() *analysis.Linter {
 }
 
 // TODO: add support ignore hash.
-func runNoLength(cfg *analysis.ConfigDefaultLinter, pkg *packages.Package) []analysis.Issue {
+func runNoLength(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Issue {
 	nodeFilter := []ast.Node{
 		(*ast.TypeSpec)(nil),
 		(*ast.Field)(nil),

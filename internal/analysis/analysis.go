@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/mirecl/golimiter/config"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -32,11 +33,11 @@ type Linter struct {
 	// The Name of the analyzer must be a valid Go identifier
 	Name string
 	// Run applies the analyzer to a package.
-	Run func(*Config, []*packages.Package) []Issue
+	Run func(*config.Config, []*packages.Package) []Issue
 }
 
 // Run analyze source code.
-func Run(cfg *Config, linters ...*Linter) map[string][]Issue {
+func Run(cfg *config.Config, linters ...*Linter) map[string][]Issue {
 	pkgs, err := packages.Load(&packages.Config{Mode: loadMode, Tests: false}, "./...")
 	if err != nil {
 		log.Fatalf("failed load go/packages: %s", err)
