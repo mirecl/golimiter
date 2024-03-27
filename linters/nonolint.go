@@ -120,6 +120,9 @@ func GetCommentsByFunc(fn *ast.FuncDecl, fileComments []*ast.CommentGroup, fset 
 
 	for _, comment := range fileComments {
 		for _, c := range comment.List {
+			if fn.Body == nil {
+				continue
+			}
 			if fn.Body.Pos() <= c.Pos() && c.Pos() <= fn.Body.End() {
 				position := fset.Position(c.Pos())
 				comments = append(comments, FuncComment{
