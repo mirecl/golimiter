@@ -186,7 +186,13 @@ func FixFuncName(text string) string {
 	res := make([]string, 0, len(segmentes))
 
 	for i, segment := range segmentes {
-		if i > 0 && slices.Contains(action, strings.ToLower(segment)) {
+		isAction := slices.Contains(action, strings.ToLower(segment))
+
+		if i == 0 && isAction {
+			return text
+		}
+
+		if isAction {
 			if IsLower(text[0]) {
 				segment = FirstToLower(segment)
 				res[0] = FirstToUpper(res[0])
