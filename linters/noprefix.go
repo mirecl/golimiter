@@ -5,6 +5,8 @@ import (
 	"go/ast"
 	"slices"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/mirecl/golimiter/analysis"
 	"github.com/mirecl/golimiter/config"
@@ -13,16 +15,10 @@ import (
 )
 
 const (
-	messageNoPrefix       = "a `prefix` funcs forbidden to use"
 	messageNoPrefixLambda = "a `lambda` funcs forbidden to use"
 )
 
-var PrefixAllow = []string{"get", "new", "is", "calc", "validate", "normalize",
-	"execute", "get", "set", "parse", "apply", "append", "clear", "remove",
-	"delete", "update", "to", "from", "run", "read", "collect", "add", "predict",
-	"inference", "check", "max", "min", "find"}
-
-// NewNoInit create instance linter for check func init.
+// NewNoPrefix create instance linter for check func prefix.
 //
 //nolint:dupl
 func NewNoPrefix() *analysis.Linter {
@@ -69,7 +65,6 @@ func runNoPrefix(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Is
 				Hash:     "",
 				Severity: cfg.Severity,
 				Type:     cfg.Type,
-				Rule:     "noprefix",
 			})
 			return
 		}
@@ -80,11 +75,17 @@ func runNoPrefix(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Is
 			return
 		}
 
-		for _, prefix := range PrefixAllow {
-			if strings.HasPrefix(name, prefix) {
-				return
-			}
+		fixName := FixFuncName(fn.Name.Name)
+
+		if fixName == fn.Name.Name {
+			return
 		}
+
+		// for _, prefix := range PrefixAllow {
+		// 	if strings.HasPrefix(name, prefix) {
+		// 		return
+		// 	}
+		// }
 
 		hash := analysis.GetHashFromString(fn.Name.Name)
 		if cfg.IsVerifyHash(hash) {
@@ -92,13 +93,12 @@ func runNoPrefix(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Is
 		}
 
 		pkgIssues = append(pkgIssues, analysis.Issue{
-			Message:  messageNoPrefix,
+			Message:  fmt.Sprintf("please rename func `%s` → `%s`", fn.Name.Name, fixName),
 			Line:     position.Line,
 			Filename: position.Filename,
 			Hash:     hash,
 			Severity: cfg.Severity,
 			Type:     cfg.Type,
-			Rule:     "noprefix",
 		})
 	})
 
@@ -169,10 +169,61 @@ func runNoCommonPrefix(cfg *config.DefaultLinter, pkg *packages.Package) (pkgIss
 				Hash:     hash,
 				Severity: cfg.Severity,
 				Type:     cfg.Type,
-				Rule:     "noprefix",
 			})
 		}
 	})
 
 	return pkgIssues
+}
+
+func FixFuncName(text string) string {
+	action := []string{"get", "new", "calc", "validate", "normalize",
+		"execute", "set", "parse", "apply", "append", "clear", "remove",
+		"delete", "update", "run", "read", "write", "collect", "add", "predict",
+		"inference", "check", "max", "min", "find"}
+
+	segmentes := GetSegments(text)
+	res := make([]string, 0, len(segmentes))
+
+	for i, segment := range segmentes {
+		if i > 0 && slices.Contains(action, strings.ToLower(segment)) {
+			if IsLower(text[0]) {
+				segment = FirstToLower(segment)
+				res[0] = FirstToUpper(res[0])
+			}
+			res = append([]string{segment}, res...)
+			continue
+		}
+		res = append(res, segment)
+	}
+
+	return strings.Join(res, "")
+}
+
+func IsLower(b byte) bool {
+	return unicode.IsLower(rune(b)) || !unicode.IsLetter(rune(b))
+}
+
+func FirstToLower(s string) string {
+	r, size := utf8.DecodeRuneInString(s)
+	if r == utf8.RuneError && size <= 1 {
+		return s
+	}
+	lc := unicode.ToLower(r)
+	if r == lc {
+		return s
+	}
+	return string(lc) + s[size:]
+}
+
+func FirstToUpper(s string) string {
+	r, size := utf8.DecodeRuneInString(s)
+	if r == utf8.RuneError && size <= 1 {
+		return s
+	}
+	lc := unicode.ToUpper(r)
+	if r == lc {
+		return s
+	}
+	return string(lc) + s[size:]
 }

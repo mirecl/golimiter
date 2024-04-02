@@ -2,7 +2,6 @@ package analysis
 
 // Issue problem in analysis.
 type Issue struct {
-	Rule     string `json:"rule"`
 	Message  string `json:"message"`
 	Filename string `json:"filename"`
 	Line     int    `json:"line"`

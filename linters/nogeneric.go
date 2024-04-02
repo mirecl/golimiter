@@ -72,7 +72,6 @@ func runNoGeneric(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.I
 			Hash:     hash,
 			Severity: cfg.Severity,
 			Type:     cfg.Type,
-			Rule:     "nogeneric",
 		})
 	})
 

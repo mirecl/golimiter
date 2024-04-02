@@ -101,7 +101,6 @@ func runNoNoLint(cfg *config.NoNoLint, pkg *packages.Package) []analysis.Issue {
 				Hash:     hash,
 				Severity: cfg.Severity,
 				Type:     cfg.Type,
-				Rule:     "nonolint",
 			})
 		}
 	})
