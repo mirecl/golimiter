@@ -19,6 +19,11 @@ const (
 	messageNoPrefixLambda = "a `lambda` funcs forbidden to use"
 )
 
+var action = []string{"get", "new", "calc", "validate", "normalize",
+	"execute", "set", "parse", "apply", "append", "clear", "remove",
+	"delete", "update", "run", "read", "write", "collect", "add", "predict",
+	"inference", "check", "max", "min", "find", "is", "any", "all"}
+
 // NewNoPrefix create instance linter for check func prefix.
 //
 //nolint:dupl
@@ -180,7 +185,9 @@ func FixNameFromFuncDecl(fn *ast.FuncDecl) string {
 	if fn.Type.Results != nil {
 		if len(fn.Type.Results.List) == 1 {
 			returnType := types.ExprString(fn.Type.Results.List[0].Type)
-			if returnType == "bool" && strings.ToLower(segmentes[0]) != "is" {
+			isAction := slices.Contains(action, strings.ToLower(segmentes[0]))
+
+			if returnType == "bool" && !isAction {
 				if IsLower(text[0]) {
 					segmentes[0] = FirstToUpper(segmentes[0])
 					segmentes = append([]string{"is"}, segmentes...)
@@ -200,10 +207,6 @@ func FixNameFromFuncDecl(fn *ast.FuncDecl) string {
 }
 
 func FixName(text string) string {
-	action := []string{"get", "new", "calc", "validate", "normalize",
-		"execute", "set", "parse", "apply", "append", "clear", "remove",
-		"delete", "update", "run", "read", "write", "collect", "add", "predict",
-		"inference", "check", "max", "min", "find", "is"}
 
 	segmentes := GetSegments(text)
 	res := make([]string, 0, len(segmentes))
