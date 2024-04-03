@@ -4,6 +4,7 @@ import (
 	"go/ast"
 	"go/types"
 	"slices"
+	"strings"
 
 	"github.com/mirecl/golimiter/analysis"
 	"github.com/mirecl/golimiter/config"
@@ -54,6 +55,12 @@ func runNoGeneric(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.I
 		currentFile := analysis.GetPathRelative(position.Filename)
 		if slices.Contains(cfg.ExcludeFiles, currentFile) {
 			return
+		}
+
+		for _, folder := range cfg.ExcludeFolders {
+			if strings.HasPrefix(currentFile, folder) {
+				return
+			}
 		}
 
 		if !IsGeneric(node, pkg.TypesInfo) {

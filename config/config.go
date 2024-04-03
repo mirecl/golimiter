@@ -29,17 +29,19 @@ type Info struct {
 }
 
 type DefaultLinter struct {
-	ExcludeHashs []ExcludeHash `yaml:"ExcludeHashs"`
-	ExcludeNames []ExcludeName `yaml:"ExcludeNames"`
-	ExcludeFiles []string      `yaml:"ExcludeFiles"`
-	Info         `yaml:"Info"`
+	ExcludeHashs   []ExcludeHash `yaml:"ExcludeHashs"`
+	ExcludeNames   []ExcludeName `yaml:"ExcludeNames"`
+	ExcludeFiles   []string      `yaml:"ExcludeFiles"`
+	ExcludeFolders []string      `yaml:"ExcludeFolders"`
+	Info           `yaml:"Info"`
 }
 
 type NoNoLint struct {
-	ExcludeHashs []ExcludeHash         `yaml:"ExcludeHashs"`
-	ExcludeNames []ExcludeNameNoNoLint `yaml:"ExcludeNames"`
-	ExcludeFiles []string              `yaml:"ExcludeFiles"`
-	Info         `yaml:"Info"`
+	ExcludeHashs   []ExcludeHash         `yaml:"ExcludeHashs"`
+	ExcludeNames   []ExcludeNameNoNoLint `yaml:"ExcludeNames"`
+	ExcludeFiles   []string              `yaml:"ExcludeFiles"`
+	ExcludeFolders []string              `yaml:"ExcludeFolders"`
+	Info           `yaml:"Info"`
 }
 
 type ExcludeHash struct {
@@ -143,8 +145,9 @@ func (c NoNoLint) IsVerifyName(path, name string, linters []string) bool {
 }
 
 type Global struct {
-	ExcludeFiles []string         `yaml:"ExcludeFiles"`
-	Linters      map[string]*Info `yaml:"Linters"`
+	ExcludeFiles   []string         `yaml:"ExcludeFiles"`
+	ExcludeFolders []string         `yaml:"ExcludeFolders"`
+	Linters        map[string]*Info `yaml:"Linters"`
 }
 
 type Settings struct {
@@ -192,36 +195,43 @@ func ReadFromBytes(body []byte) (*Config, error) {
 		cfg.NoDefer.Info = GetGlobalConfigForLinter(settings.Global.Linters, "NoDefer")
 	}
 	cfg.NoDefer.ExcludeFiles = append(cfg.NoDefer.ExcludeFiles, settings.Global.ExcludeFiles...)
+	cfg.NoDefer.ExcludeFolders = append(cfg.NoDefer.ExcludeFolders, settings.Global.ExcludeFolders...)
 
 	if reflect.ValueOf(cfg.NoGeneric.Info).IsZero() {
 		cfg.NoGeneric.Info = GetGlobalConfigForLinter(settings.Global.Linters, "NoGeneric")
 	}
 	cfg.NoGeneric.ExcludeFiles = append(cfg.NoGeneric.ExcludeFiles, settings.Global.ExcludeFiles...)
+	cfg.NoGeneric.ExcludeFolders = append(cfg.NoGeneric.ExcludeFolders, settings.Global.ExcludeFolders...)
 
 	if reflect.ValueOf(cfg.NoGoroutine.Info).IsZero() {
 		cfg.NoGoroutine.Info = GetGlobalConfigForLinter(settings.Global.Linters, "NoGoroutine")
 	}
 	cfg.NoGoroutine.ExcludeFiles = append(cfg.NoGoroutine.ExcludeFiles, settings.Global.ExcludeFiles...)
+	cfg.NoGoroutine.ExcludeFolders = append(cfg.NoGoroutine.ExcludeFolders, settings.Global.ExcludeFolders...)
 
 	if reflect.ValueOf(cfg.NoInit.Info).IsZero() {
 		cfg.NoInit.Info = GetGlobalConfigForLinter(settings.Global.Linters, "NoInit")
 	}
 	cfg.NoInit.ExcludeFiles = append(cfg.NoInit.ExcludeFiles, settings.Global.ExcludeFiles...)
+	cfg.NoInit.ExcludeFolders = append(cfg.NoInit.ExcludeFolders, settings.Global.ExcludeFolders...)
 
 	if reflect.ValueOf(cfg.NoLength.Info).IsZero() {
 		cfg.NoLength.Info = GetGlobalConfigForLinter(settings.Global.Linters, "NoLength")
 	}
 	cfg.NoLength.ExcludeFiles = append(cfg.NoLength.ExcludeFiles, settings.Global.ExcludeFiles...)
+	cfg.NoLength.ExcludeFolders = append(cfg.NoLength.ExcludeFolders, settings.Global.ExcludeFolders...)
 
 	if reflect.ValueOf(cfg.NoNoLint.Info).IsZero() {
 		cfg.NoNoLint.Info = GetGlobalConfigForLinter(settings.Global.Linters, "NoNoLint")
 	}
 	cfg.NoNoLint.ExcludeFiles = append(cfg.NoNoLint.ExcludeFiles, settings.Global.ExcludeFiles...)
+	cfg.NoNoLint.ExcludeFolders = append(cfg.NoNoLint.ExcludeFolders, settings.Global.ExcludeFolders...)
 
 	if reflect.ValueOf(cfg.NoPrefix.Info).IsZero() {
 		cfg.NoPrefix.Info = GetGlobalConfigForLinter(settings.Global.Linters, "NoPrefix")
 	}
 	cfg.NoPrefix.ExcludeFiles = append(cfg.NoPrefix.ExcludeFiles, settings.Global.ExcludeFiles...)
+	cfg.NoPrefix.ExcludeFolders = append(cfg.NoPrefix.ExcludeFolders, settings.Global.ExcludeFolders...)
 
 	return &cfg, nil
 }

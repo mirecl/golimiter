@@ -63,6 +63,12 @@ func runNoPrefix(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Is
 			return
 		}
 
+		for _, folder := range cfg.ExcludeFolders {
+			if strings.HasPrefix(currentFile, folder) {
+				return
+			}
+		}
+
 		if fn.Name == nil {
 			pkgIssues = append(pkgIssues, analysis.Issue{
 				Message:  messageNoPrefixLambda,
@@ -115,6 +121,12 @@ func runNoCommonPrefix(cfg *config.DefaultLinter, pkg *packages.Package) (pkgIss
 		currentFile := analysis.GetPathRelative(position.Filename)
 		if slices.Contains(cfg.ExcludeFiles, currentFile) {
 			return
+		}
+
+		for _, folder := range cfg.ExcludeFolders {
+			if strings.HasPrefix(currentFile, folder) {
+				return
+			}
 		}
 
 		typeSpec := node.(*ast.TypeSpec)

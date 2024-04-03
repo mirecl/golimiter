@@ -3,6 +3,7 @@ package linters
 import (
 	"go/ast"
 	"slices"
+	"strings"
 
 	"github.com/mirecl/golimiter/analysis"
 	"github.com/mirecl/golimiter/config"
@@ -50,6 +51,12 @@ func runNoInit(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Issu
 		currentFile := analysis.GetPathRelative(position.Filename)
 		if slices.Contains(cfg.ExcludeFiles, currentFile) {
 			return
+		}
+
+		for _, folder := range cfg.ExcludeFolders {
+			if strings.HasPrefix(currentFile, folder) {
+				return
+			}
 		}
 
 		fn, _ := node.(*ast.FuncDecl)

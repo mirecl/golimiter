@@ -67,6 +67,12 @@ func runNoNoLint(cfg *config.NoNoLint, pkg *packages.Package) []analysis.Issue {
 			return
 		}
 
+		for _, folder := range cfg.ExcludeFolders {
+			if strings.HasPrefix(currentFile, folder) {
+				return
+			}
+		}
+
 		nFuncDecl, _ := node.(*ast.FuncDecl)
 
 		file := pkg.Fset.Position(node.Pos()).Filename

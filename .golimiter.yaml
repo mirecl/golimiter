@@ -3,6 +3,8 @@
 # Type: VULNERABILITY, CODE_SMELL, BUG (default)
 # Disable: true, false (default)
 global:
+  ExcludeFolders:
+    - scripts/
   ExcludeFiles:
     - internal/linters/nogeneric.go
   Linters:
