@@ -182,9 +182,6 @@ func FixNameFromFuncDecl(fn *ast.FuncDecl) string {
 	text := strings.ReplaceAll(fn.Name.Name, "_", "")
 
 	segmentes := GetSegments(text)
-	if len(segmentes) == 1 {
-		return text
-	}
 
 	if fn.Type.Results != nil {
 		if len(fn.Type.Results.List) == 1 {
@@ -205,6 +202,10 @@ func FixNameFromFuncDecl(fn *ast.FuncDecl) string {
 	fixName := strings.TrimSpace(strings.Join(segmentes, ""))
 	if fixName != text {
 		return fixName
+	}
+
+	if len(segmentes) == 1 {
+		return text
 	}
 
 	return FixName(text)
