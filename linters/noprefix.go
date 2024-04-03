@@ -179,7 +179,7 @@ func FixNameFromFuncDecl(fn *ast.FuncDecl) string {
 		return ""
 	}
 
-	text := fn.Name.Name
+	text := strings.ReplaceAll(fn.Name.Name, "_", "")
 
 	segmentes := GetSegments(text)
 	if len(segmentes) == 1 {
@@ -262,8 +262,4 @@ func FirstToUpper(s string) string {
 		return s
 	}
 	return string(lc) + s[size:]
-}
-
-func AmountForCalc() {
-	return
 }
