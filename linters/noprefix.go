@@ -279,6 +279,6 @@ func FirstToUpper(s string) string {
 	return string(lc) + s[size:]
 }
 
-func CheckGetIsIsAmount() bool {
-	return true
+func AmountForCalc() {
+	return
 }
