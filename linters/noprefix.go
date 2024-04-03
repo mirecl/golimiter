@@ -86,19 +86,6 @@ func runNoPrefix(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Is
 			return
 		}
 
-		actions := GetActionFromFuncName(name)
-		if len(actions) > 1 {
-			pkgIssues = append(pkgIssues, analysis.Issue{
-				Message:  fmt.Sprintf("in func `%s` found %d actions: %v, should be 1 action", name, len(actions), actions),
-				Line:     position.Line,
-				Filename: position.Filename,
-				Hash:     hash,
-				Severity: cfg.Severity,
-				Type:     cfg.Type,
-			})
-			return
-		}
-
 		fixName := FixNameFromFuncDecl(fn)
 		if fixName == fn.Name.Name {
 			return
@@ -187,22 +174,6 @@ func runNoCommonPrefix(cfg *config.DefaultLinter, pkg *packages.Package) (pkgIss
 	return pkgIssues
 }
 
-func GetActionFromFuncName(text string) []string {
-	segmentes := GetSegments(text)
-	if len(segmentes) == 1 {
-		return segmentes
-	}
-
-	actions := make([]string, 0)
-	for _, segment := range segmentes {
-		if slices.Contains(action, strings.ToLower(segment)) {
-			actions = append(actions, segment)
-		}
-	}
-
-	return actions
-}
-
 func FixNameFromFuncDecl(fn *ast.FuncDecl) string {
 	if fn.Name == nil {
 		return ""
@@ -220,11 +191,18 @@ func FixNameFromFuncDecl(fn *ast.FuncDecl) string {
 			returnType := types.ExprString(fn.Type.Results.List[0].Type)
 			isAction := slices.Contains(action, strings.ToLower(segmentes[0]))
 
-			if returnType == "bool" && strings.ToLower(segmentes[0]) == "get" {
+			if returnType == "bool" &&
+				(strings.ToLower(segmentes[0]) == "get" || strings.ToLower(segmentes[0]) == "check") {
 				if IsLower(text[0]) {
 					segmentes[0] = "is"
 				} else {
 					segmentes[0] = "Is"
+				}
+
+				for i, segment := range segmentes {
+					if (strings.ToLower(segment) == "is" || strings.ToLower(segment) == "Is") && i > 0 {
+						segmentes[i] = ""
+					}
 				}
 			}
 
@@ -301,6 +279,6 @@ func FirstToUpper(s string) string {
 	return string(lc) + s[size:]
 }
 
-func GetCheckIsAmount() bool {
+func CheckGetIsIsAmount() bool {
 	return true
 }
