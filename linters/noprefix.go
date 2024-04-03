@@ -191,21 +191,6 @@ func FixNameFromFuncDecl(fn *ast.FuncDecl) string {
 			returnType := types.ExprString(fn.Type.Results.List[0].Type)
 			isAction := slices.Contains(action, strings.ToLower(segmentes[0]))
 
-			if returnType == "bool" &&
-				(strings.ToLower(segmentes[0]) == "get" || strings.ToLower(segmentes[0]) == "check") {
-				if IsLower(text[0]) {
-					segmentes[0] = "is"
-				} else {
-					segmentes[0] = "Is"
-				}
-
-				for i, segment := range segmentes {
-					if (strings.ToLower(segment) == "is" || strings.ToLower(segment) == "Is") && i > 0 {
-						segmentes[i] = ""
-					}
-				}
-			}
-
 			if returnType == "bool" && !isAction {
 				if IsLower(text[0]) {
 					segmentes[0] = FirstToUpper(segmentes[0])
