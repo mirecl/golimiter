@@ -3,6 +3,7 @@ package linters
 import (
 	"fmt"
 	"go/ast"
+	"go/types"
 	"slices"
 	"strings"
 	"unicode"
@@ -69,31 +70,24 @@ func runNoPrefix(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Is
 			return
 		}
 
-		name := strings.ToLower(fn.Name.Name)
+		name := fn.Name.Name
 
 		if name == "main" || name == "init" {
 			return
 		}
 
-		fixName := FixFuncName(fn.Name.Name)
-
+		fixName := FixNameFromFuncDecl(fn)
 		if fixName == fn.Name.Name {
 			return
 		}
 
-		// for _, prefix := range PrefixAllow {
-		// 	if strings.HasPrefix(name, prefix) {
-		// 		return
-		// 	}
-		// }
-
-		hash := analysis.GetHashFromString(fn.Name.Name)
+		hash := analysis.GetHashFromString(name)
 		if cfg.IsVerifyHash(hash) {
 			return
 		}
 
 		pkgIssues = append(pkgIssues, analysis.Issue{
-			Message:  fmt.Sprintf("please rename func `%s` → `%s`", fn.Name.Name, fixName),
+			Message:  fmt.Sprintf("please rename func `%s` → `%s`", name, fixName),
 			Line:     position.Line,
 			Filename: position.Filename,
 			Hash:     hash,
@@ -106,7 +100,6 @@ func runNoPrefix(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Is
 }
 
 func runNoCommonPrefix(cfg *config.DefaultLinter, pkg *packages.Package) (pkgIssues []analysis.Issue) {
-
 	inspect := inspector.New(pkg.Syntax)
 
 	nodeFilter := []ast.Node{(*ast.TypeSpec)(nil)}
@@ -176,11 +169,41 @@ func runNoCommonPrefix(cfg *config.DefaultLinter, pkg *packages.Package) (pkgIss
 	return pkgIssues
 }
 
-func FixFuncName(text string) string {
+func FixNameFromFuncDecl(fn *ast.FuncDecl) string {
+	if fn.Name == nil {
+		return ""
+	}
+
+	text := fn.Name.Name
+	segmentes := GetSegments(text)
+
+	if fn.Type.Results != nil {
+		if len(fn.Type.Results.List) == 1 {
+			returnType := types.ExprString(fn.Type.Results.List[0].Type)
+			if returnType == "bool" && strings.ToLower(segmentes[0]) != "is" {
+				if IsLower(text[0]) {
+					segmentes[0] = FirstToUpper(segmentes[0])
+					segmentes = append([]string{"is"}, segmentes...)
+				} else {
+					segmentes = append([]string{"Is"}, segmentes...)
+				}
+			}
+		}
+	}
+
+	fixName := strings.Join(segmentes, "")
+	if fixName != text {
+		return fixName
+	}
+
+	return FixName(text)
+}
+
+func FixName(text string) string {
 	action := []string{"get", "new", "calc", "validate", "normalize",
 		"execute", "set", "parse", "apply", "append", "clear", "remove",
 		"delete", "update", "run", "read", "write", "collect", "add", "predict",
-		"inference", "check", "max", "min", "find"}
+		"inference", "check", "max", "min", "find", "is"}
 
 	segmentes := GetSegments(text)
 	res := make([]string, 0, len(segmentes))
