@@ -97,6 +97,7 @@ func GetVarFromBody(block *ast.BlockStmt) []BodyVariable {
 	for _, stmt := range block.List {
 		if assignStmt, ok := stmt.(*ast.AssignStmt); ok {
 			if ident, ok := assignStmt.Lhs[0].(*ast.Ident); ok {
+				fmt.Println(ident.Obj, ident.Obj.Data, ident.Name)
 				if ident.Obj.Data != 0 {
 					variables = append(variables, BodyVariable{
 						Name:     ident.Name,
