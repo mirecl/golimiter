@@ -13,13 +13,14 @@ import (
 )
 
 type Config struct {
-	NoNoLint    NoNoLint      `yaml:"NoNoLint"`
-	NoGoroutine DefaultLinter `yaml:"NoGoroutine"`
-	NoLength    DefaultLinter `yaml:"NoLength"`
-	NoDefer     DefaultLinter `yaml:"NoDefer"`
-	NoInit      DefaultLinter `yaml:"NoInit"`
-	NoGeneric   DefaultLinter `yaml:"NoGeneric"`
-	NoPrefix    DefaultLinter `yaml:"NoPrefix"`
+	NoNoLint     NoNoLint      `yaml:"NoNoLint"`
+	NoGoroutine  DefaultLinter `yaml:"NoGoroutine"`
+	NoLength     DefaultLinter `yaml:"NoLength"`
+	NoDefer      DefaultLinter `yaml:"NoDefer"`
+	NoInit       DefaultLinter `yaml:"NoInit"`
+	NoGeneric    DefaultLinter `yaml:"NoGeneric"`
+	NoPrefix     DefaultLinter `yaml:"NoPrefix"`
+	NoUnderscore DefaultLinter `yaml:"NoUnderscore"`
 }
 
 type Info struct {
@@ -232,6 +233,12 @@ func ReadFromBytes(body []byte) (*Config, error) {
 	}
 	cfg.NoPrefix.ExcludeFiles = append(cfg.NoPrefix.ExcludeFiles, settings.Global.ExcludeFiles...)
 	cfg.NoPrefix.ExcludeFolders = append(cfg.NoPrefix.ExcludeFolders, settings.Global.ExcludeFolders...)
+
+	if reflect.ValueOf(cfg.NoUnderscore.Info).IsZero() {
+		cfg.NoUnderscore.Info = GetGlobalConfigForLinter(settings.Global.Linters, "NoUnderscore")
+	}
+	cfg.NoUnderscore.ExcludeFiles = append(cfg.NoUnderscore.ExcludeFiles, settings.Global.ExcludeFiles...)
+	cfg.NoUnderscore.ExcludeFolders = append(cfg.NoUnderscore.ExcludeFolders, settings.Global.ExcludeFolders...)
 
 	return &cfg, nil
 }

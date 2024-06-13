@@ -3,6 +3,7 @@ package linters
 import (
 	"fmt"
 	"go/ast"
+	"go/token"
 	"go/types"
 	"slices"
 	"strings"
@@ -16,7 +17,10 @@ import (
 )
 
 const (
-	messageNoPrefixLambda = "a `lambda` funcs forbidden to use"
+	messageNoPrefixLambda                   = "a `lambda` funcs forbidden to use"
+	messageNoPrefixUpperFirstSymbolVariable = "please not use `%s` with first Upper symbol in variable"
+	messageNoPrefixUpperFirstSymbolParams   = "please not use `%s` with first Upper symbol in params"
+	messageNoPrefixUpperFirstSymbolReturns  = "please not use `%s` with first Upper symbol in returns"
 )
 
 var action = []string{"get", "new", "calc", "validate", "normalize",
@@ -40,11 +44,153 @@ func NewNoPrefix() *analysis.Linter {
 			for _, pkg := range pkgs {
 				issues = append(issues, runNoPrefix(&cfg.NoPrefix, pkg)...)
 				issues = append(issues, runNoCommonPrefix(&cfg.NoPrefix, pkg)...)
+				issues = append(issues, runNoPrefixUpperSymbol(&cfg.NoPrefix, pkg)...)
 			}
 
 			return issues
 		},
 	}
+}
+
+func GetParamsFromFunc(funcType *ast.FuncType) []string {
+	params := funcType.Params
+	if params.NumFields() == 0 {
+		return nil
+	}
+
+	res := make([]string, 0, params.NumFields())
+
+	for _, field := range params.List {
+		if field.Names[0].Name != "_" {
+			res = append(res, field.Names[0].Name)
+		}
+	}
+	return res
+}
+
+func GetReturnsFromFunc(funcType *ast.FuncType) []string {
+	returns := funcType.Results
+	if returns.NumFields() == 0 {
+		return nil
+	}
+
+	res := make([]string, 0, returns.NumFields())
+
+	for _, field := range returns.List {
+		if len(field.Names) == 0 {
+			continue
+		}
+		if field.Names[0].Name != "_" && field.Names[0].Name != "" {
+			res = append(res, field.Names[0].Name)
+		}
+	}
+	return res
+}
+
+type BodyVariable struct {
+	Name     string
+	Position token.Pos
+}
+
+func GetVarFromBody(block *ast.BlockStmt) []BodyVariable {
+	var variables []BodyVariable
+	for _, stmt := range block.List {
+		if assignStmt, ok := stmt.(*ast.AssignStmt); ok {
+			if ident, ok := assignStmt.Lhs[0].(*ast.Ident); ok {
+				if ident.Obj.Data != 0 {
+					variables = append(variables, BodyVariable{
+						Name:     ident.Name,
+						Position: ident.NamePos,
+					})
+				}
+			}
+		}
+		if declStmt, ok := stmt.(*ast.DeclStmt); ok {
+			if genDecl, ok := declStmt.Decl.(*ast.GenDecl); ok {
+				if genDecl.Tok == token.VAR {
+					for _, spec := range genDecl.Specs {
+						if valueSpec, ok := spec.(*ast.ValueSpec); ok {
+							for _, ident := range valueSpec.Names {
+								variables = append(variables, BodyVariable{
+									Name:     ident.Name,
+									Position: ident.NamePos,
+								})
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return variables
+}
+
+func runNoPrefixUpperSymbol(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Issue {
+	var pkgIssues []analysis.Issue
+
+	nodeFilter := []ast.Node{(*ast.FuncDecl)(nil)}
+	inspect := inspector.New(pkg.Syntax)
+
+	inspect.Preorder(nodeFilter, func(node ast.Node) {
+		decl := node.(*ast.FuncDecl)
+
+		for _, field := range GetVarFromBody(decl.Body) {
+			if !unicode.IsUpper(rune(field.Name[0])) {
+				continue
+			}
+
+			position := pkg.Fset.Position(field.Position)
+
+			hash := analysis.GetHashFromString(field.Name)
+
+			pkgIssues = append(pkgIssues, analysis.Issue{
+				Message:  fmt.Sprintf(messageNoPrefixUpperFirstSymbolVariable, field.Name),
+				Line:     position.Line,
+				Filename: position.Filename,
+				Hash:     hash,
+				Severity: cfg.Severity,
+				Type:     cfg.Type,
+			})
+		}
+
+		position := pkg.Fset.Position(node.Pos())
+
+		for _, field := range GetParamsFromFunc(decl.Type) {
+			if !unicode.IsUpper(rune(field[0])) {
+				continue
+			}
+
+			hash := analysis.GetHashFromString(field)
+
+			pkgIssues = append(pkgIssues, analysis.Issue{
+				Message:  fmt.Sprintf(messageNoPrefixUpperFirstSymbolParams, field),
+				Line:     position.Line,
+				Filename: position.Filename,
+				Hash:     hash,
+				Severity: cfg.Severity,
+				Type:     cfg.Type,
+			})
+		}
+
+		for _, field := range GetReturnsFromFunc(decl.Type) {
+			if !unicode.IsUpper(rune(field[0])) {
+				continue
+			}
+
+			hash := analysis.GetHashFromString(field)
+
+			pkgIssues = append(pkgIssues, analysis.Issue{
+				Message:  fmt.Sprintf(messageNoPrefixUpperFirstSymbolReturns, field),
+				Line:     position.Line,
+				Filename: position.Filename,
+				Hash:     hash,
+				Severity: cfg.Severity,
+				Type:     cfg.Type,
+			})
+		}
+	})
+
+	return pkgIssues
 }
 
 func runNoPrefix(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Issue {
