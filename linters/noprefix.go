@@ -141,6 +141,17 @@ func runNoPrefixUpperSymbol(cfg *config.DefaultLinter, pkg *packages.Package) []
 
 			position := pkg.Fset.Position(field.Position)
 
+			currentFile := analysis.GetPathRelative(position.Filename)
+			if slices.Contains(cfg.ExcludeFiles, currentFile) {
+				return
+			}
+
+			for _, folder := range cfg.ExcludeFolders {
+				if strings.HasPrefix(currentFile, folder) {
+					return
+				}
+			}
+
 			hash := analysis.GetHashFromString(field.Name)
 
 			pkgIssues = append(pkgIssues, analysis.Issue{
@@ -156,6 +167,17 @@ func runNoPrefixUpperSymbol(cfg *config.DefaultLinter, pkg *packages.Package) []
 		position := pkg.Fset.Position(node.Pos())
 
 		for _, field := range GetParamsFromFunc(decl.Type) {
+			currentFile := analysis.GetPathRelative(position.Filename)
+			if slices.Contains(cfg.ExcludeFiles, currentFile) {
+				return
+			}
+
+			for _, folder := range cfg.ExcludeFolders {
+				if strings.HasPrefix(currentFile, folder) {
+					return
+				}
+			}
+
 			if !unicode.IsUpper(rune(field[0])) {
 				continue
 			}
@@ -173,6 +195,17 @@ func runNoPrefixUpperSymbol(cfg *config.DefaultLinter, pkg *packages.Package) []
 		}
 
 		for _, field := range GetReturnsFromFunc(decl.Type) {
+			currentFile := analysis.GetPathRelative(position.Filename)
+			if slices.Contains(cfg.ExcludeFiles, currentFile) {
+				return
+			}
+
+			for _, folder := range cfg.ExcludeFolders {
+				if strings.HasPrefix(currentFile, folder) {
+					return
+				}
+			}
+
 			if !unicode.IsUpper(rune(field[0])) {
 				continue
 			}
