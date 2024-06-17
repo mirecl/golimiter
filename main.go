@@ -11,7 +11,7 @@ import (
 )
 
 // Version golimiter linter.
-const Version string = "0.4.3"
+const Version string = "0.5.0"
 
 func main() {
 	jsonFlag := flag.Bool("json", false, "format report")
@@ -30,16 +30,7 @@ func main() {
 		panic(err)
 	}
 
-	allIssues := analysis.Run(cfg,
-		linters.NewNoGeneric(),
-		linters.NewNoInit(),
-		linters.NewNoGoroutine(),
-		linters.NewNoNoLint(),
-		linters.NewNoDefer(),
-		linters.NewNoLength(),
-		linters.NewNoPrefix(),
-		linters.NewNoUnderscore(),
-	)
+	allIssues := analysis.Run(cfg, linters.All...)
 
 	if *jsonFlag {
 		if allIssuesBytes, err := json.Marshal(allIssues); err == nil {

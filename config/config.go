@@ -21,6 +21,7 @@ type Config struct {
 	NoGeneric    DefaultLinter `yaml:"NoGeneric"`
 	NoPrefix     DefaultLinter `yaml:"NoPrefix"`
 	NoUnderscore DefaultLinter `yaml:"NoUnderscore"`
+	NoObject     DefaultLinter `yaml:"NoObject"`
 }
 
 type Info struct {
@@ -239,6 +240,12 @@ func ReadFromBytes(body []byte) (*Config, error) {
 	}
 	cfg.NoUnderscore.ExcludeFiles = append(cfg.NoUnderscore.ExcludeFiles, settings.Global.ExcludeFiles...)
 	cfg.NoUnderscore.ExcludeFolders = append(cfg.NoUnderscore.ExcludeFolders, settings.Global.ExcludeFolders...)
+
+	if reflect.ValueOf(cfg.NoObject.Info).IsZero() {
+		cfg.NoObject.Info = GetGlobalConfigForLinter(settings.Global.Linters, "NoObject")
+	}
+	cfg.NoObject.ExcludeFiles = append(cfg.NoObject.ExcludeFiles, settings.Global.ExcludeFiles...)
+	cfg.NoObject.ExcludeFolders = append(cfg.NoObject.ExcludeFolders, settings.Global.ExcludeFolders...)
 
 	return &cfg, nil
 }
