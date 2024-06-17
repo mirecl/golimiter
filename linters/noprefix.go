@@ -373,7 +373,15 @@ func FixNameFromFuncDecl(fn *ast.FuncDecl) string {
 		return ""
 	}
 
-	text := strings.ReplaceAll(fn.Name.Name, "_", "")
+	names := strings.Split(fn.Name.Name, "_")
+	for i, name := range names {
+		if i == 0 {
+			continue
+		}
+		names[i] = FirstToUpper(name)
+	}
+
+	text := strings.Join(names, "")
 
 	segmentes := GetSegments(text)
 
