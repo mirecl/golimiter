@@ -156,6 +156,9 @@ func runNoPrefixUpperSymbol(cfg *config.DefaultLinter, pkg *packages.Package) []
 			}
 
 			hash := analysis.GetHashFromString(field.Name)
+			if cfg.IsVerifyHash(hash) {
+				continue
+			}
 
 			pkgIssues = append(pkgIssues, analysis.Issue{
 				Message:  fmt.Sprintf(messageNoPrefixUpperFirstSymbolVariable, field.Name),

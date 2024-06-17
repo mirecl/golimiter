@@ -54,6 +54,9 @@ func runNoObjectMainFile(cfg *config.DefaultLinter, pkg *packages.Package) []ana
 
 		if strings.HasSuffix(fileName, "main.go") {
 			hash := analysis.GetHashFromString(file)
+			if cfg.IsVerifyHash(hash) {
+				return pkgIssues
+			}
 
 			pkgIssues = append(pkgIssues, analysis.Issue{
 				Message:  messageNoObjectMain,
@@ -92,6 +95,9 @@ func runNoObjectScripts(cfg *config.DefaultLinter, pkg *packages.Package) []anal
 	}
 
 	hash := analysis.GetHashFromString(pkg.PkgPath)
+	if cfg.IsVerifyHash(hash) {
+		return pkgIssues
+	}
 
 	pkgIssues = append(pkgIssues, analysis.Issue{
 		Message:  messageNoObjectScripts,
@@ -120,14 +126,19 @@ func runNoObjectPackageFile(cfg *config.DefaultLinter, pkg *packages.Package) []
 		return pkgIssues
 	}
 
+L:
 	for _, file := range pkg.GoFiles {
 		if strings.Contains(file, fmt.Sprintf("%s.go", pkg.Name)) {
 			isFind = true
+			break L
 		}
 	}
 
 	if !isFind {
-		hash := analysis.GetHashFromString(pkg.PkgPath)
+		hash := analysis.GetHashFromString(fmt.Sprintf("%s_%s", pkg.PkgPath, pkg.Name))
+		if cfg.IsVerifyHash(hash) {
+			return pkgIssues
+		}
 
 		pkgIssues = append(pkgIssues, analysis.Issue{
 			Message:  fmt.Sprintf(messageNoObjectPackageFile, pkg.PkgPath, pkg.Name),

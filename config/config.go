@@ -17,6 +17,7 @@ type Config struct {
 	NoGoroutine  DefaultLinter `yaml:"NoGoroutine"`
 	NoLength     DefaultLinter `yaml:"NoLength"`
 	NoDefer      DefaultLinter `yaml:"NoDefer"`
+	NoDoc        DefaultLinter `yaml:"NoDoc"`
 	NoInit       DefaultLinter `yaml:"NoInit"`
 	NoGeneric    DefaultLinter `yaml:"NoGeneric"`
 	NoPrefix     DefaultLinter `yaml:"NoPrefix"`
@@ -246,6 +247,12 @@ func ReadFromBytes(body []byte) (*Config, error) {
 	}
 	cfg.NoObject.ExcludeFiles = append(cfg.NoObject.ExcludeFiles, settings.Global.ExcludeFiles...)
 	cfg.NoObject.ExcludeFolders = append(cfg.NoObject.ExcludeFolders, settings.Global.ExcludeFolders...)
+
+	if reflect.ValueOf(cfg.NoDoc.Info).IsZero() {
+		cfg.NoDoc.Info = GetGlobalConfigForLinter(settings.Global.Linters, "NoDoc")
+	}
+	cfg.NoDoc.ExcludeFiles = append(cfg.NoDoc.ExcludeFiles, settings.Global.ExcludeFiles...)
+	cfg.NoDoc.ExcludeFolders = append(cfg.NoDoc.ExcludeFolders, settings.Global.ExcludeFolders...)
 
 	return &cfg, nil
 }

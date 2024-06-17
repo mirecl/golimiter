@@ -13,4 +13,5 @@ var All = []*analysis.Linter{
 	NewNoPrefix(),
 	NewNoUnderscore(),
 	NewNoObject(),
+	NewNoDoc(),
 }

@@ -63,22 +63,25 @@ func runNoUnderscore(cfg *config.DefaultLinter, pkg *packages.Package) []analysi
 
 			position := pkg.Fset.Position(object.Pos())
 			hash := analysis.GetHashFromString(object.Name)
+			if cfg.IsVerifyHash(hash) {
+				return pkgIssues
+			}
 
 			currentFile := analysis.GetPathRelative(position.Filename)
 			if slices.Contains(cfg.ExcludeFiles, currentFile) {
 				continue
 			}
 
-			skip := false
+			isFind := false
 		L:
 			for _, folder := range cfg.ExcludeFolders {
 				if strings.HasPrefix(currentFile, folder) {
-					skip = true
+					isFind = true
 					break L
 				}
 			}
 
-			if skip {
+			if isFind {
 				continue
 			}
 
@@ -128,6 +131,9 @@ func runNoUnderscore(cfg *config.DefaultLinter, pkg *packages.Package) []analysi
 		}
 
 		hash := analysis.GetHashFromString(ident.Obj.Name)
+		if cfg.IsVerifyHash(hash) {
+			return
+		}
 
 		pkgIssues = append(pkgIssues, analysis.Issue{
 			Message:  fmt.Sprintf(messageNoUnderscoreVariable, ident.Obj.Name),
@@ -144,6 +150,9 @@ func runNoUnderscore(cfg *config.DefaultLinter, pkg *packages.Package) []analysi
 	}
 
 	hash := analysis.GetHashFromString(pkg.Name)
+	if cfg.IsVerifyHash(hash) {
+		return pkgIssues
+	}
 
 	for _, filename := range pkg.GoFiles {
 		currentFile := analysis.GetPathRelative(filename)
@@ -151,16 +160,16 @@ func runNoUnderscore(cfg *config.DefaultLinter, pkg *packages.Package) []analysi
 			continue
 		}
 
-		skip := false
+		isFind := false
 	K:
 		for _, folder := range cfg.ExcludeFolders {
 			if strings.HasPrefix(currentFile, folder) {
-				skip = true
+				isFind = true
 				break K
 			}
 		}
 
-		if skip {
+		if isFind {
 			continue
 		}
 
