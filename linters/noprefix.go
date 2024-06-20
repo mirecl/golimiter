@@ -61,8 +61,10 @@ func GetParamsFromFunc(funcType *ast.FuncType) []string {
 	res := make([]string, 0, params.NumFields())
 
 	for _, field := range params.List {
-		if field.Names[0].Name != "_" {
-			res = append(res, field.Names[0].Name)
+		for _, name := range field.Names {
+			if name.Name != "_" {
+				res = append(res, name.Name)
+			}
 		}
 	}
 	return res
@@ -77,11 +79,10 @@ func GetReturnsFromFunc(funcType *ast.FuncType) []string {
 	res := make([]string, 0, returns.NumFields())
 
 	for _, field := range returns.List {
-		if len(field.Names) == 0 {
-			continue
-		}
-		if field.Names[0].Name != "_" && field.Names[0].Name != "" {
-			res = append(res, field.Names[0].Name)
+		for _, name := range field.Names {
+			if name.Name != "_" && name.Name != "" {
+				res = append(res, name.Name)
+			}
 		}
 	}
 	return res
@@ -172,7 +173,10 @@ func runNoPrefixUpperSymbol(cfg *config.DefaultLinter, pkg *packages.Package) []
 
 		position := pkg.Fset.Position(node.Pos())
 
-		for _, field := range GetParamsFromFunc(decl.Type) {
+		params := GetParamsFromFunc(decl.Type)
+
+		for _, field := range params {
+
 			currentFile := analysis.GetPathRelative(position.Filename)
 			if slices.Contains(cfg.ExcludeFiles, currentFile) {
 				return
