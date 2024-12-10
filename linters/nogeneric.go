@@ -39,10 +39,12 @@ func NewNoGeneric() *analysis.Linter {
 }
 
 func runNoGeneric(cfg *config.DefaultLinter, pkg *packages.Package) []analysis.Issue {
+
 	nodeFilter := []ast.Node{
 		(*ast.FuncType)(nil),
 		(*ast.InterfaceType)(nil),
 		(*ast.TypeSpec)(nil),
+		(*ast.Ident)(nil),
 	}
 
 	inspect := inspector.New(pkg.Syntax)
@@ -96,11 +98,22 @@ func IsGeneric(node ast.Node, info *types.Info) bool {
 		}
 	case *ast.InterfaceType:
 		tv := info.Types[n]
-		if iface, _ := tv.Type.(*types.Interface); iface != nil && !iface.IsMethodSet() {
+
+		if n.Methods != nil && len(n.Methods.List) == 0 {
+			isGeneric = true
+		}
+
+		iface, _ := tv.Type.(*types.Interface)
+
+		if iface != nil && !iface.IsMethodSet() {
 			isGeneric = true
 		}
 	case *ast.TypeSpec:
 		if tparams := ForTypeSpec(n); tparams != nil {
+			isGeneric = true
+		}
+	case *ast.Ident:
+		if n.Name == "any" {
 			isGeneric = true
 		}
 	default:
