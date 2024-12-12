@@ -119,13 +119,18 @@ func findEmbeddedFields(st *ast.StructType) []EmbeddedFields {
 			continue
 		}
 
+		tag := ""
+		if field.Tag != nil {
+			tag = field.Tag.Value
+		}
+
 		// Получаем тип поля
 		fieldType := field.Type
 		switch t := fieldType.(type) {
 		case *ast.Ident: // Простое имя
-			embeddedFields = append(embeddedFields, EmbeddedFields{t.Name, t.Pos(), field.Tag.Value})
+			embeddedFields = append(embeddedFields, EmbeddedFields{t.Name, t.Pos(), tag})
 		case *ast.SelectorExpr: // Тип с пакетом, например pkg.T
-			embeddedFields = append(embeddedFields, EmbeddedFields{t.Sel.Name, t.Pos(), field.Tag.Value})
+			embeddedFields = append(embeddedFields, EmbeddedFields{t.Sel.Name, t.Pos(), tag})
 		}
 	}
 
