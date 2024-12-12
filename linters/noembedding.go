@@ -86,7 +86,7 @@ func runNoStructEmbedding(cfg *config.DefaultLinter, pkg *packages.Package) []an
 				continue
 			}
 
-			if !strings.Contains(field.Tag, "json:") {
+			if strings.Contains(field.Tag, "json:") {
 				continue
 			}
 
