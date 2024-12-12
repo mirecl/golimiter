@@ -14,4 +14,5 @@ var All = []*analysis.Linter{
 	NewNoUnderscore(),
 	NewNoObject(),
 	NewNoDoc(),
+	NewEmbedding(),
 }

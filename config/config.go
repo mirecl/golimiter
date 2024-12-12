@@ -23,6 +23,7 @@ type Config struct {
 	NoPrefix     DefaultLinter `yaml:"NoPrefix"`
 	NoUnderscore DefaultLinter `yaml:"NoUnderscore"`
 	NoObject     DefaultLinter `yaml:"NoObject"`
+	NoEmbedding  DefaultLinter `yaml:"NoEmbedding"`
 }
 
 type Info struct {
@@ -253,6 +254,12 @@ func ReadFromBytes(body []byte) (*Config, error) {
 	}
 	cfg.NoDoc.ExcludeFiles = append(cfg.NoDoc.ExcludeFiles, settings.Global.ExcludeFiles...)
 	cfg.NoDoc.ExcludeFolders = append(cfg.NoDoc.ExcludeFolders, settings.Global.ExcludeFolders...)
+
+	if reflect.ValueOf(cfg.NoDoc.Info).IsZero() {
+		cfg.NoEmbedding.Info = GetGlobalConfigForLinter(settings.Global.Linters, "NoEmbedding")
+	}
+	cfg.NoEmbedding.ExcludeFiles = append(cfg.NoEmbedding.ExcludeFiles, settings.Global.ExcludeFiles...)
+	cfg.NoEmbedding.ExcludeFolders = append(cfg.NoEmbedding.ExcludeFolders, settings.Global.ExcludeFolders...)
 
 	return &cfg, nil
 }
