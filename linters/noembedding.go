@@ -45,6 +45,17 @@ func runNoStructEmbedding(cfg *config.DefaultLinter, pkg *packages.Package) []an
 
 	var pkgIssues []analysis.Issue
 
+	gomodfile, err := config.ReadModFile()
+	if err != nil {
+		panic(err)
+	}
+
+	pkgName := strings.ReplaceAll(pkg.PkgPath, fmt.Sprintf("%s/", gomodfile.Module.Mod.Path), "")
+
+	if !strings.HasPrefix(pkgName, "pkg/request") && !strings.HasPrefix(pkgName, "pkg/response") {
+		return pkgIssues
+	}
+
 	inspect.Preorder(nodeFilter, func(node ast.Node) {
 		typeSpec := node.(*ast.TypeSpec)
 
@@ -75,6 +86,10 @@ func runNoStructEmbedding(cfg *config.DefaultLinter, pkg *packages.Package) []an
 				continue
 			}
 
+			if !strings.Contains(field.Tag, "json:") {
+				continue
+			}
+
 			pkgIssues = append(pkgIssues, analysis.Issue{
 				Message:  fmt.Sprintf(messageNoStructEmbedding, field.Name),
 				Line:     p.Line,
@@ -93,6 +108,7 @@ func runNoStructEmbedding(cfg *config.DefaultLinter, pkg *packages.Package) []an
 type EmbeddedFields struct {
 	Name string
 	Pos  token.Pos
+	Tag  string
 }
 
 func findEmbeddedFields(st *ast.StructType) []EmbeddedFields {
@@ -107,9 +123,9 @@ func findEmbeddedFields(st *ast.StructType) []EmbeddedFields {
 		fieldType := field.Type
 		switch t := fieldType.(type) {
 		case *ast.Ident: // Простое имя
-			embeddedFields = append(embeddedFields, EmbeddedFields{t.Name, t.Pos()})
+			embeddedFields = append(embeddedFields, EmbeddedFields{t.Name, t.Pos(), field.Tag.Value})
 		case *ast.SelectorExpr: // Тип с пакетом, например pkg.T
-			embeddedFields = append(embeddedFields, EmbeddedFields{t.Sel.Name, t.Pos()})
+			embeddedFields = append(embeddedFields, EmbeddedFields{t.Sel.Name, t.Pos(), field.Tag.Value})
 		}
 	}
 

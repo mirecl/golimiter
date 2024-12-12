@@ -18,12 +18,6 @@ global:
 
 module:
   github.com/mirecl/golimiter:
-    NoEmbedding:
-      ExcludeHashs:
-        - Hash: 9592600c2f9d5618c835c15a40b7f194
-          Comment: Config linter
-        - Hash: cf22d8032aa53bc49d9d59cc2849a618
-          Comment: Config linter
     NoDefer:
       ExcludeHashs:
         - Hash: 9272e16ca4af2a3e3910d95cc9ab6411
