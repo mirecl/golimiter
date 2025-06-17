@@ -30,6 +30,8 @@ func main() {
 		panic(err)
 	}
 
+	fmt.Println("1")
+
 	allIssues := analysis.Run(cfg, linters.All...)
 
 	if *jsonFlag {
