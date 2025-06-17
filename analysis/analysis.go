@@ -42,6 +42,7 @@ func Run(cfg *config.Config, linters ...*Linter) map[string][]Issue {
 	if err != nil {
 		log.Fatalf("failed load go/packages: %s", err)
 	}
+	fmt.Println(2)
 
 	allIssues := make(map[string][]Issue, len(linters))
 
