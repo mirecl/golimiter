@@ -2,6 +2,7 @@ package linters
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/mirecl/golimiter/analysis"
@@ -47,6 +48,16 @@ func runNoObjectMainFile(cfg *config.DefaultLinter, pkg *packages.Package) []ana
 	for _, file := range pkg.GoFiles {
 		filePath := analysis.GetPathRelative(file)
 		fileName := strings.ReplaceAll(filePath, fmt.Sprintf("%s/", gomodfile.Module.Mod.Path), "")
+
+		if slices.Contains(cfg.ExcludeFiles, filePath) {
+			return pkgIssues
+		}
+
+		for _, folder := range cfg.ExcludeFolders {
+			if strings.HasPrefix(filePath, folder) {
+				return pkgIssues
+			}
+		}
 
 		if fileName == "main.go" {
 			continue
