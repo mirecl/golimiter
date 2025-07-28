@@ -11,7 +11,7 @@ import (
 )
 
 // Version golimiter linter.
-const Version string = "0.8.3"
+const Version string = "0.9.2"
 
 func main() {
 	jsonFlag := flag.Bool("json", false, "format report")
@@ -20,8 +20,14 @@ func main() {
 
 	flag.Parse()
 
-	if *versionFlag {
+	if *versionFlag && !*jsonFlag {
 		fmt.Printf("golimiter %s\n", Version)
+		return
+	}
+
+	if *versionFlag && *jsonFlag {
+		version, _ := json.Marshal(map[string]string{"version": Version})
+		fmt.Println(string(version))
 		return
 	}
 
